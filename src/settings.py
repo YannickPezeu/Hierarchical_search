@@ -30,8 +30,11 @@ def init_settings():
     Initializes LlamaIndex settings to use a custom OpenAI-compatible endpoint
     and a MarkdownNodeParser for chunking.
     """
-    api_base = os.getenv("OPENAI_API_ENDPOINT")
-    api_key = os.getenv("OPENAI_KEY")
+    # api_base = os.getenv("OPENAI_API_ENDPOINT")
+    # api_key = os.getenv("OPENAI_KEY")
+
+    api_base = os.getenv("RCP_API_ENDPOINT")
+    api_key = os.getenv("RCP_API_KEY")
 
     if not api_key:
         raise ValueError("OPENAI_KEY is missing in environment variables")
@@ -40,7 +43,7 @@ def init_settings():
 
     # llm_model = os.getenv("RCP_MISTRAL_3_2_MODEL", "gpt-4o")
     llm_model = 'gpt-4o-mini'
-    embedding_model = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-large")
+    embedding_model = os.getenv("RCP_QWEN_EMBEDDING_MODEL")
 
     print('embedding_model', embedding_model)
     print('api_base', api_base)

@@ -12,7 +12,7 @@ from passlib.context import CryptContext
 
 
 from src.settings import init_settings
-from src.components import FilterEmptyNodes, RepairRelationships, AddBreadcrumbs, ContextMerger
+from src.components import FilterEmptyNodes, RepairRelationships, AddBreadcrumbs, ContextMerger, normalize_filename
 from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks, HTTPException, status
 
 
@@ -72,7 +72,7 @@ def run_indexing_logic(source_md_dir: str, index_dir: str):
     """Encapsule toute la logique de notre script ingest.py."""
     logger.info(f"Démarrage de l'indexation LlamaIndex pour le dossier : {source_md_dir}")
     init_settings() # S'assure que les settings sont chargés pour cette tâche
-    
+
     pipeline = IngestionPipeline(
         transformations=[
             MarkdownNodeParser(include_metadata=True, include_prev_next_rel=True),
@@ -80,10 +80,10 @@ def run_indexing_logic(source_md_dir: str, index_dir: str):
             RepairRelationships(),
         ]
     )
-    
+
     documents = SimpleDirectoryReader(source_md_dir).load_data()
     parent_nodes = pipeline.run(documents=documents)
-    
+
     child_splitter = SentenceSplitter(chunk_size=128, chunk_overlap=0)
     all_nodes = []
     child_nodes = []
@@ -125,72 +125,10 @@ def remove_duplicate_headers(markdown_text: str) -> str:
 
     return "\n".join(cleaned_lines)
 
-def index_creation_task(
-        user_id: str,
-        index_id: str,
-        files_info: List[dict],  # On passe des infos sur les fichiers, pas les objets
-        metadata_json: str
-):
-    """
-    Tâche de fond complète :
-    1. Convertit les fichiers sources sauvegardés via Docling.
-    2. Sauvegarde les .md résultants.
-    3. Lance l'indexation LlamaIndex sur les .md.
-    """
-    index_path = get_index_path(user_id, index_id)
-    source_files_dir = os.path.join(index_path, "source_files")
-    md_files_dir = os.path.join(index_path, "md_files")
-    index_dir = os.path.join(index_path, "index")
-    os.makedirs(md_files_dir, exist_ok=True)
-
-    try:
-        metadata = json.loads(metadata_json)
-
-        # --- Étape 1: Conversion de chaque fichier source ---
-        for file_info in files_info:
-            file_path = file_info["path"]
-            filename = file_info["filename"]
-            logger.info(f"Conversion du fichier '{filename}' via Docling...")
-
-            with open(file_path, "rb") as f:
-                response = requests.post(
-                    DOCLING_URL,
-                    files={'files': (filename, f)},
-                    data={"table_mode": "accurate"}
-                )
-                response.raise_for_status()
-
-            response.encoding = 'utf-8'
-
-            # --- Étape 2: Sauvegarde du Markdown et des métadonnées ---
-            md_content = response.json()["document"]["md_content"]
-
-            logger.info(f"Nettoyage du contenu Markdown pour '{file_info['filename']}'...")
-            cleaned_md = remove_duplicate_headers(md_content)  # On appelle la fonction de nettoyage
-
-            source_url = metadata.get(file_info['filename'], "URL non fournie")
-
-            md_filename = f"{os.path.splitext(file_info['filename'])[0]}.md"
-            md_filepath = os.path.join(md_files_dir, md_filename)
-            meta_filepath = os.path.join(md_files_dir, f"{md_filename}.meta")
-
-            with open(md_filepath, "w", encoding="utf-8") as f:
-                f.write(cleaned_md)  # On écrit le contenu NETTOYÉ
-            with open(meta_filepath, "w", encoding="utf-8") as f:
-                json.dump({"source_url": source_url}, f)
-
-        # --- Étape 3: Lancer l'indexation LlamaIndex sur le dossier des .md ---
-        run_indexing_logic(source_md_dir=md_files_dir, index_dir=index_dir)
-
-    except Exception as e:
-        logger.error(f"Erreur lors de la tâche d'indexation pour '{index_path}': {e}", exc_info=True)
-        shutil.rmtree(index_path)
-
-# --- Routes de l'API ---
 
 # src/main.py
 
-# ... (tous les imports et les helpers restent les mêmes) ...
+# ... (gardez tous vos imports et autres fonctions inchangés) ...
 
 @app.post("/index/{user_id}/{index_id}", status_code=status.HTTP_202_ACCEPTED, response_model=IndexResponse)
 async def create_index(
@@ -198,7 +136,7 @@ async def create_index(
         index_id: str,
         background_tasks: BackgroundTasks,
         files: List[UploadFile] = File(...),
-        metadata_json: str = Form(...),
+        metadata_json: Optional[str] = Form(None),
         password: Optional[str] = Form(None)
 ):
     """
@@ -208,11 +146,11 @@ async def create_index(
     index_path = get_index_path(user_id, index_id)
     source_files_dir = os.path.join(index_path, "source_files")
 
-    # --- NOUVELLE LOGIQUE "EXIST_OK" ---
+    # --- LOGIQUE DE NETTOYAGE MODIFIÉE ---
     if os.path.exists(index_path):
-        logger.info(f"L'index '{index_id}' existe déjà. Nettoyage des anciens fichiers générés...")
-        # Supprimer les anciens résultats, mais PAS les sources
-        for sub in ["md_files", "index", ".pw_hash"]:
+        logger.info(f"L'index '{index_id}' existe déjà. Nettoyage des anciennes données d'index...")
+        # On ne supprime que l'index et le hash du mot de passe, PAS les "md_files".
+        for sub in ["index", ".pw_hash"]:
             path_to_remove = os.path.join(index_path, sub)
             if os.path.exists(path_to_remove):
                 if os.path.isdir(path_to_remove):
@@ -225,7 +163,7 @@ async def create_index(
 
     # On s'assure que le dossier source existe (au cas où il aurait été supprimé manuellement)
     os.makedirs(source_files_dir, exist_ok=True)
-    # --- FIN DE LA NOUVELLE LOGIQUE ---
+    # --- FIN DE LA LOGIQUE MODIFIÉE ---
 
     # La suite est identique : on sauvegarde les fichiers uploadés dans source_files
     files_info = []
@@ -246,7 +184,121 @@ async def create_index(
             "index_path": index_path}
 
 
+def index_creation_task(
+        user_id: str,
+        index_id: str,
+        files_info: List[dict],  # On passe des infos sur les fichiers, pas les objets
+        metadata_json: str
+):
+    """
+    Tâche de fond complète :
+    1. Convertit les fichiers sources sauvegardés via Docling (si nécessaire).
+    2. Répare les problèmes d'encodage potentiels de la réponse.
+    3. Nettoie le contenu et le sauvegarde en .md.
+    4. Lance l'indexation LlamaIndex sur les .md.
+    """
+    index_path = get_index_path(user_id, index_id)
+    md_files_dir = os.path.join(index_path, "md_files")
+    index_dir = os.path.join(index_path, "index")
+    os.makedirs(md_files_dir, exist_ok=True)
 
+    try:
+        if metadata_json:
+            metadata = json.loads(metadata_json)
+        else:
+            metadata = {}  # ✅ Safely handle the missing metadata
+        # --- END OF MODIFICATION ---
+
+        # --- Étape 1: Conversion de chaque fichier source ---
+        for file_info in files_info:
+            file_path = file_info["path"]
+            original_filename = file_info["filename"]
+
+            # --- NOUVELLE LOGIQUE POUR IGNORER LES FICHIERS EXISTANTS ---
+            # Construire le chemin attendu pour le fichier .md
+
+            normalized_basename, _ = os.path.splitext(normalize_filename(original_filename))
+            md_filename = f"{normalized_basename}.md"
+            md_filepath = os.path.join(md_files_dir, md_filename)
+
+
+            # Vérifier si le fichier .md existe déjà
+            if os.path.exists(md_filepath):
+                logger.info(f"Le fichier Markdown '{md_filename}' existe déjà. La conversion Docling est ignorée.")
+                continue  # Passer au fichier suivant
+            # --- FIN DE LA NOUVELLE LOGIQUE ---
+
+            logger.info(f"Conversion du fichier '{original_filename}' via Docling...")
+
+            try:
+                # La partie avec requests.post
+                with open(file_path, "rb") as f:
+                    response = requests.post(
+                        DOCLING_URL,
+                        files={'files': (original_filename, f)},
+                        data={"table_mode": "accurate"},
+                        # Ajouter un timeout côté client est une bonne pratique
+                    )
+                    # Cette ligne va lever une exception pour les erreurs 4xx/5xx
+                    response.raise_for_status()
+
+            except requests.exceptions.HTTPError as http_err:
+                logger.error(f"Erreur HTTP de Docling pour le fichier '{original_filename}': {http_err}")
+                logger.error(f"Réponse du serveur: {response.text}")
+                # On passe au fichier suivant au lieu de faire planter toute la tâche
+                continue
+            except requests.exceptions.RequestException as req_err:
+                logger.error(f"Erreur de connexion à Docling pour le fichier '{original_filename}': {req_err}")
+                continue
+
+            # --- Étape 2: Réparation de l'encodage et traitement du contenu ---
+            raw_response_text = response.text
+            try:
+                repaired_json_string = raw_response_text.encode('latin-1').decode('utf-8')
+            except (UnicodeEncodeError, UnicodeDecodeError):
+                repaired_json_string = raw_response_text
+
+            response_data = json.loads(repaired_json_string)
+            md_content = response_data.get("document", {}).get("md_content", "")
+
+            # --- Étape 3: Nettoyage et sauvegarde ---
+            logger.info(f"Nettoyage du contenu Markdown pour '{original_filename}'...")
+            cleaned_md = remove_duplicate_headers(md_content)
+
+            source_url = metadata.get(original_filename, "URL non fournie")
+
+            # On utilise les variables md_filename et md_filepath déjà définies
+            meta_filepath = os.path.join(md_files_dir, f"{md_filename}.meta")
+
+            with open(md_filepath, "w", encoding="utf-8") as f:
+                f.write(cleaned_md)
+            with open(meta_filepath, "w", encoding="utf-8") as f:
+                json.dump({"source_url": source_url}, f)
+
+        # --- Étape 4: Lancer l'indexation LlamaIndex sur le dossier des .md ---
+        run_indexing_logic(source_md_dir=md_files_dir, index_dir=index_dir)
+
+    except Exception as e:
+        logger.error(f"Erreur lors de la tâche d'indexation pour '{index_path}': {e}", exc_info=True)
+        # --- GESTION D'ERREUR AMÉLIORÉE ---
+        # En cas d'erreur, on ne supprime que l'index potentiellement corrompu, pas tout.
+        if os.path.exists(index_dir):
+            shutil.rmtree(index_dir)
+        # --- FIN DE LA GESTION D'ERREUR ---
+
+# --- Routes de l'API ---
+
+# src/main.py
+
+# ... (tous les imports et les helpers restent les mêmes) ...
+
+
+
+
+
+
+@app.post("/search/{user_id}/{index_id}", response_model=List[SearchResultNode])
+# ... (imports et autres fonctions inchangés) ...
 
 @app.post("/search/{user_id}/{index_id}", response_model=List[SearchResultNode])
 async def search_in_index(user_id: str, index_id: str, request: SearchRequest):
@@ -269,7 +321,7 @@ async def search_in_index(user_id: str, index_id: str, request: SearchRequest):
         if not verify_password(request.password, hashed_password):
             raise HTTPException(status_code=403, detail="Mot de passe incorrect.")
 
-    # --- LOGIQUE DE CACHING ---
+    # --- LOGIQUE DE CACHING (inchangée) ---
     if index_dir not in INDEX_CACHE:
         logger.info(f"Index '{index_dir}' non trouvé dans le cache. Chargement...")
         init_settings()
@@ -281,33 +333,41 @@ async def search_in_index(user_id: str, index_id: str, request: SearchRequest):
             vector_retriever=base_retriever,
             storage_context=storage_context,
         )
-        INDEX_CACHE[index_dir] = (merging_retriever, storage_context)  # On met aussi le context en cache
+        INDEX_CACHE[index_dir] = (merging_retriever, storage_context)
         logger.info(f"Index '{index_dir}' chargé et mis en cache.")
     else:
         logger.info(f"Index '{index_dir}' trouvé dans le cache.")
-        merging_retriever, storage_context = INDEX_CACHE[index_dir]  # On récupère les deux
+        merging_retriever, storage_context = INDEX_CACHE[index_dir]
 
-    # La suite de la logique utilise le retriever (chargé ou depuis le cache)
-    query_engine = RetrieverQueryEngine.from_args(
-        retriever=merging_retriever,
-        node_postprocessors=[
-            # On utilise directement la variable storage_context locale
-            ContextMerger(docstore=storage_context.docstore),
-            AddBreadcrumbs()
-        ]
-    )
+    # ▼▼▼ DÉBUT DE LA LOGIQUE CORRIGÉE ▼▼▼
 
-    retrieved_nodes = query_engine.retrieve(request.query)
+    # 1. Récupérer les nodes de base directement depuis le retriever
+    retrieved_nodes = merging_retriever.retrieve(request.query)
 
-    # Formatter la réponse
+    # 2. Instancier et appliquer manuellement les post-processeurs
+    context_merger = ContextMerger(docstore=storage_context.docstore)
+    add_breadcrumbs = AddBreadcrumbs()
+
+    # Appliquer le premier post-processeur
+    merged_nodes = context_merger.postprocess_nodes(retrieved_nodes, query_bundle=request.query)
+
+    # Appliquer le second post-processeur sur le résultat du premier
+    final_nodes = add_breadcrumbs.postprocess_nodes(merged_nodes, query_bundle=request.query)
+
+    # Formatter la réponse en utilisant les nodes finaux
     results = []
-    for n in retrieved_nodes:
-        title = n.node.metadata.get("Header 2", n.node.metadata.get("Header 1", "Titre non trouvé"))
+    for n in final_nodes:  # <-- On utilise bien la variable `final_nodes`
+        # On garde la logique de fallback pour le titre
+        title = n.node.metadata.get("Header 2", n.node.metadata.get("Header 1", n.node.metadata.get("file_name",
+                                                                                                    "Titre non trouvé")))
+
         results.append(SearchResultNode(
-            content=n.node.get_content(),
+            content=n.node.get_content(),  # <-- Ceci contiendra maintenant les breadcrumbs
             score=n.score,
             title=str(title),
             source_url=n.node.metadata.get("source_url", "URL non trouvée")
         ))
-    
+
     return results
+
+    # ▲▲▲ FIN DE LA LOGIQUE CORRIGÉE ▲▲▲

@@ -6,7 +6,7 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from src.main import app
+from src.main_undstructured_io import app
 
 # --- Constantes pour les tests ---
 TEST_USER_ID = "test_user"

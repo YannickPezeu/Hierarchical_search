@@ -1,8 +1,11 @@
 # src/components.py (VERSION FINALE CORRIGÉE)
+import urllib.parse
+
 from llama_index.core.schema import TransformComponent, NodeWithScore, QueryBundle, NodeRelationship, RelatedNodeInfo, TextNode
 from llama_index.core.postprocessor.types import BaseNodePostprocessor # Votre import correct
 from typing import List, Optional
 from llama_index.core.storage.docstore.types import BaseDocumentStore
+from collections import Counter # <--- IMPORTATION AJOUTÉE
 
 # La classe FilterEmptyNodes est déjà correcte
 class FilterEmptyNodes(TransformComponent):
@@ -84,3 +87,49 @@ class ContextMerger(BaseNodePostprocessor):
             merged_nodes.append(merged_node)
             
         return merged_nodes
+
+def remove_duplicate_headers(markdown_text: str) -> str:
+    # Cette fonction reste utile car unstructured peut aussi extraire des en-têtes répétitifs.
+    lines = markdown_text.splitlines()
+    headers = [line.strip() for line in lines if line.strip().startswith("#")]
+    header_counts = Counter(headers)
+    duplicate_headers = {header for header, count in header_counts.items() if count > 1}
+    cleaned_lines = []
+    seen_duplicates = set()
+    for line in lines:
+        stripped_line = line.strip()
+        if stripped_line in duplicate_headers:
+            if stripped_line in seen_duplicates:
+                continue
+            else:
+                seen_duplicates.add(stripped_line)
+        cleaned_lines.append(line)
+    return "\n".join(cleaned_lines)
+
+
+def normalize_filename(filename: str) -> str:
+    """
+    Normalise un nom de fichier de manière universelle :
+    1. Décode les caractères d'URL (ex: %20 -> espace).
+    2. Remplace les différents types d'apostrophes par un underscore.
+    """
+    # Étape 1: Décoder les caractères d'URL
+    name = urllib.parse.unquote(filename)
+
+    # Étape 2: Remplacer les apostrophes (notre logique précédente)
+    name = name.replace("’", "_")
+    name = name.replace("'", "_")
+
+    return name
+
+class CleanHeaders(TransformComponent):
+    """
+    Applique la fonction remove_duplicate_headers sur le texte de chaque node.
+    """
+
+    def __call__(self, nodes, **kwargs):
+        for node in nodes:
+            # On modifie le contenu du node en utilisant la méthode prévue à cet effet
+            cleaned_text = remove_duplicate_headers(node.get_content())
+            node.set_content(cleaned_text)
+        return nodes
