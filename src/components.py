@@ -41,7 +41,7 @@ class RepairRelationships(TransformComponent):
         return nodes
 
 # La classe AddBreadcrumbs est déjà correcte
-class AddBreadcrumbs(BaseNodePostprocessor):
+class AddBreadcrumbs_bu(BaseNodePostprocessor):
     def _postprocess_nodes(self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle] = None) -> List[NodeWithScore]:
         for n in nodes:
             header_keys = sorted([key for key in n.node.metadata.keys() if key.startswith("Header")])
@@ -50,7 +50,38 @@ class AddBreadcrumbs(BaseNodePostprocessor):
                 file_name = n.node.metadata.get("file_name", "Document")
                 n.node.set_content(f"Source: {file_name}\nContexte: {breadcrumbs}\n---\n{n.node.get_content()}")
         return nodes
-    
+
+
+# src/components.py
+
+class AddBreadcrumbs(BaseNodePostprocessor):
+    def _postprocess_nodes(self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle] = None) -> List[
+        NodeWithScore]:
+
+        # ▼▼▼ LIGNES DE DÉBOGAGE À AJOUTER ▼▼▼
+
+        print("\n--- 🕵️‍♀️ Inspection des métadonnées dans AddBreadcrumbs ---")
+        for i, n in enumerate(nodes):
+            print(f"\n[INFO] Métadonnées du Node #{i}:")
+            # Affiche toutes les métadonnées du node actuel
+            print(n.node.metadata)
+
+            # Votre code original reste ici pour voir s'il s'exécute
+            header_keys = sorted([key for key in n.node.metadata.keys() if key.startswith("Header")])
+
+            if header_keys:
+                print(f"  [✅ SUCCÈS] Headers trouvés: {header_keys}")
+                breadcrumbs = " > ".join([n.node.metadata[key] for key in header_keys])
+                file_name = n.node.metadata.get("file_name", "Document")
+                n.node.set_content(f"Source: {file_name}\nContexte: {breadcrumbs}\n---\n{n.node.get_content()}")
+            else:
+                print("  [⚠️ ALERTE] Aucun 'Header' trouvé dans les métadonnées de ce node.")
+
+        print("--- Fin de l'inspection ---")
+
+        # ▲▲▲ FIN DES LIGNES DE DÉBOGAGE ▲▲▲
+
+        return nodes
 
 class ContextMerger(BaseNodePostprocessor):
     """

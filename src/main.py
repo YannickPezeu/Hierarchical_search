@@ -17,13 +17,16 @@ from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks, HTTPExcept
 
 
 # --- Imports de notre logique RAG ---
-from llama_index.core import StorageContext, load_index_from_storage, VectorStoreIndex, SimpleDirectoryReader # <--- AJOUTÉ
 from llama_index.core.retrievers import AutoMergingRetriever
-from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import MarkdownNodeParser, SentenceSplitter
 from llama_index.core.schema import NodeRelationship, RelatedNodeInfo
 from collections import Counter # <--- Importation ajoutée
+
+
+from llama_index.core import StorageContext, load_index_from_storage, VectorStoreIndex, SimpleDirectoryReader
+from llama_index.vector_stores.faiss import FaissVectorStore
+import faiss
 
 # --- Configuration ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -68,11 +71,18 @@ def get_password_hash(password: str) -> str:
     """Hashe un mot de passe."""
     return pwd_context.hash(password)
 
+
+
+
+
+# ... (autres imports)
+
 def run_indexing_logic(source_md_dir: str, index_dir: str):
     """Encapsule toute la logique de notre script ingest.py."""
     logger.info(f"Démarrage de l'indexation LlamaIndex pour le dossier : {source_md_dir}")
     init_settings() # S'assure que les settings sont chargés pour cette tâche
 
+    # Le pipeline et la création des nodes ne changent pas
     pipeline = IngestionPipeline(
         transformations=[
             MarkdownNodeParser(include_metadata=True, include_prev_next_rel=True),
@@ -80,7 +90,6 @@ def run_indexing_logic(source_md_dir: str, index_dir: str):
             RepairRelationships(),
         ]
     )
-
     documents = SimpleDirectoryReader(source_md_dir).load_data()
     parent_nodes = pipeline.run(documents=documents)
 
@@ -95,12 +104,31 @@ def run_indexing_logic(source_md_dir: str, index_dir: str):
         all_nodes.append(parent_node)
         all_nodes.extend(sub_nodes)
 
-    storage_context = StorageContext.from_defaults()
-    storage_context.docstore.add_documents(all_nodes)
-    index = VectorStoreIndex(nodes=child_nodes, storage_context=storage_context)
-    index.storage_context.persist(persist_dir=index_dir)
-    logger.info(f"Indexation terminée et sauvegardée dans : {index_dir}")
+    # ▼▼▼ BLOC CORRIGÉ ▼▼▼
 
+    # Mettez ici la dimension de votre modèle (voir point 2 ci-dessous)
+    d = 4096 # Exemple à adapter
+
+    # Initialiser un index FAISS
+    faiss_index = faiss.IndexFlatL2(d)
+
+    # Créer le VectorStore en utilisant l'index FAISS
+    vector_store = FaissVectorStore(faiss_index=faiss_index)
+
+    # Créer le StorageContext en fournissant notre vector_store.
+    # LlamaIndex créera un docstore par défaut pour nous.
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+
+    # Ajouter tous les nodes (parents et enfants) au docstore
+    storage_context.docstore.add_documents(all_nodes)
+
+    # Construire l'index en utilisant les child_nodes pour le store de vecteurs
+    index = VectorStoreIndex(nodes=child_nodes, storage_context=storage_context)
+
+    # ▲▲▲ FIN DU BLOC CORRIGÉ ▲▲▲
+
+    index.storage_context.persist(persist_dir=index_dir)
+    logger.info(f"Indexation FAISS terminée et sauvegardée dans : {index_dir}")
 
 def remove_duplicate_headers(markdown_text: str) -> str:
     """
@@ -293,12 +321,7 @@ def index_creation_task(
 # ... (tous les imports et les helpers restent les mêmes) ...
 
 
-
-
-
-
-@app.post("/search/{user_id}/{index_id}", response_model=List[SearchResultNode])
-# ... (imports et autres fonctions inchangés) ...
+# src/main.py
 
 @app.post("/search/{user_id}/{index_id}", response_model=List[SearchResultNode])
 async def search_in_index(user_id: str, index_id: str, request: SearchRequest):
@@ -311,7 +334,7 @@ async def search_in_index(user_id: str, index_id: str, request: SearchRequest):
     if not os.path.exists(index_dir):
         raise HTTPException(status_code=404, detail="Index non trouvé.")
 
-    # Vérification du mot de passe (inchangé)
+    # La vérification du mot de passe reste inchangée
     pw_file = os.path.join(index_path, ".pw_hash")
     if os.path.exists(pw_file):
         if not request.password:
@@ -321,53 +344,64 @@ async def search_in_index(user_id: str, index_id: str, request: SearchRequest):
         if not verify_password(request.password, hashed_password):
             raise HTTPException(status_code=403, detail="Mot de passe incorrect.")
 
-    # --- LOGIQUE DE CACHING (inchangée) ---
+    # --- LOGIQUE DE CACHING MISE À JOUR ---
     if index_dir not in INDEX_CACHE:
-        logger.info(f"Index '{index_dir}' non trouvé dans le cache. Chargement...")
+        # ▼▼▼ DÉBUT DU BLOC CORRIGÉ ▼▼▼
+        logger.info(f"Index '{index_dir}' non trouvé dans le cache. Chargement spécifique à FAISS...")
         init_settings()
-        storage_context = StorageContext.from_defaults(persist_dir=index_dir)
-        index = load_index_from_storage(storage_context)
 
+        # 1. Charger l'index FAISS binaire depuis le fichier
+        # Le nom par défaut est 'default__vector_store.faiss'
+        faiss_index_path = os.path.join(index_dir, "default__vector_store.json")
+        if not os.path.exists(faiss_index_path):
+            raise HTTPException(status_code=500, detail="Fichier d'index FAISS non trouvé. Veuillez ré-indexer.")
+
+        faiss_index = faiss.read_index(faiss_index_path)
+
+        # 2. Créer le FaissVectorStore à partir de l'index chargé
+        vector_store = FaissVectorStore(faiss_index=faiss_index)
+
+        # 3. Créer le StorageContext en spécifiant ce vector_store
+        #    et en indiquant à LlamaIndex de charger le reste (docstore, etc.) depuis le dossier
+        storage_context = StorageContext.from_defaults(
+            vector_store=vector_store,
+            persist_dir=index_dir
+        )
+
+        # 4. Charger l'index LlamaIndex principal à partir de ce contexte
+        index = load_index_from_storage(storage_context)
+        # ▲▲▲ FIN DU BLOC CORRIGÉ ▲▲▲
+
+        # Le reste de la logique de création du retriever ne change pas
         base_retriever = index.as_retriever(similarity_top_k=5)
         merging_retriever = AutoMergingRetriever(
             vector_retriever=base_retriever,
             storage_context=storage_context,
         )
         INDEX_CACHE[index_dir] = (merging_retriever, storage_context)
-        logger.info(f"Index '{index_dir}' chargé et mis en cache.")
+        logger.info(f"Index FAISS '{index_dir}' chargé et mis en cache.")
     else:
         logger.info(f"Index '{index_dir}' trouvé dans le cache.")
         merging_retriever, storage_context = INDEX_CACHE[index_dir]
 
-    # ▼▼▼ DÉBUT DE LA LOGIQUE CORRIGÉE ▼▼▼
-
-    # 1. Récupérer les nodes de base directement depuis le retriever
+    # La logique de recherche et de post-processing reste la même
     retrieved_nodes = merging_retriever.retrieve(request.query)
 
-    # 2. Instancier et appliquer manuellement les post-processeurs
     context_merger = ContextMerger(docstore=storage_context.docstore)
     add_breadcrumbs = AddBreadcrumbs()
 
-    # Appliquer le premier post-processeur
     merged_nodes = context_merger.postprocess_nodes(retrieved_nodes, query_bundle=request.query)
-
-    # Appliquer le second post-processeur sur le résultat du premier
     final_nodes = add_breadcrumbs.postprocess_nodes(merged_nodes, query_bundle=request.query)
 
-    # Formatter la réponse en utilisant les nodes finaux
     results = []
-    for n in final_nodes:  # <-- On utilise bien la variable `final_nodes`
-        # On garde la logique de fallback pour le titre
+    for n in final_nodes:
         title = n.node.metadata.get("Header 2", n.node.metadata.get("Header 1", n.node.metadata.get("file_name",
                                                                                                     "Titre non trouvé")))
-
         results.append(SearchResultNode(
-            content=n.node.get_content(),  # <-- Ceci contiendra maintenant les breadcrumbs
+            content=n.node.get_content(),
             score=n.score,
             title=str(title),
             source_url=n.node.metadata.get("source_url", "URL non trouvée")
         ))
 
     return results
-
-    # ▲▲▲ FIN DE LA LOGIQUE CORRIGÉE ▲▲▲
