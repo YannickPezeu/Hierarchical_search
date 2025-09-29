@@ -1,3 +1,4 @@
 .env
 /all_indexes/
 *.pdf
+/k8s

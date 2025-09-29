@@ -164,3 +164,92 @@ class CleanHeaders(TransformComponent):
             cleaned_text = remove_duplicate_headers(node.get_content())
             node.set_content(cleaned_text)
         return nodes
+
+
+# src/components.py (VERSION FINALE CORRIGÉE)
+import urllib.parse
+import requests  # <-- NOUVEL IMPORT
+import os  # <-- NOUVEL IMPORT
+
+from llama_index.core.schema import TransformComponent, NodeWithScore, QueryBundle, NodeRelationship, RelatedNodeInfo, \
+    TextNode
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
+from typing import List, Optional
+from llama_index.core.storage.docstore.types import BaseDocumentStore
+from collections import Counter
+
+
+# ... [TOUTES VOS CLASSES ET FONCTIONS EXISTANTES RESTENT INCHANGÉES] ...
+# FilterEmptyNodes, RepairRelationships, AddBreadcrumbs_bu, AddBreadcrumbs,
+# ContextMerger, remove_duplicate_headers, normalize_filename, CleanHeaders
+# ...
+
+# ▼▼▼ NOUVELLE CLASSE AJOUTÉE À LA FIN DU FICHIER ▼▼▼
+
+class ApiReranker(BaseNodePostprocessor):
+    """
+    Post-processeur de nodes qui utilise une API externe pour re-classer
+    les résultats en fonction de leur pertinence par rapport à la requête.
+    """
+    top_n: int = 5
+    model: str
+    api_base: str
+    api_key: str
+
+    def _postprocess_nodes(
+            self,
+            nodes: List[NodeWithScore],
+            query_bundle: Optional[QueryBundle] = None,
+    ) -> List[NodeWithScore]:
+        """
+        Envoie les nodes à l'API de reranking et retourne la liste
+        ré-ordonnée et re-scorée.
+        """
+        if query_bundle is None or not nodes:
+            print("⚠️ Reranker : Requête ou nodes manquants, étape ignorée.")
+            return nodes
+
+        query_str = query_bundle.query_str
+        documents_to_rerank = [n.node.get_content() for n in nodes]
+
+        rerank_url = f"{self.api_base}/rerank"
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+        data = {
+            "model": self.model,
+            "query": query_str,
+            "documents": documents_to_rerank,
+            "top_k": self.top_n,  # L'API retournera les `top_k` meilleurs résultats
+        }
+
+        try:
+            print(f"🚀 Envoi de {len(documents_to_rerank)} documents au reranker (modèle: {self.model})...")
+            response = requests.post(rerank_url, headers=headers, json=data, timeout=180)
+            response.raise_for_status()
+            results = response.json()["results"]
+
+            reranked_nodes = []
+            for res in results:
+                original_index = res.get("index")
+                new_score = res.get("relevance_score")
+
+                if original_index is not None and new_score is not None:
+                    # Créer un nouvel objet NodeWithScore avec le score mis à jour
+                    reranked_node = NodeWithScore(
+                        node=nodes[original_index].node,
+                        score=new_score
+                    )
+                    reranked_nodes.append(reranked_node)
+
+            print(f"✅ Reranking réussi. {len(reranked_nodes)} nodes conservés.")
+            return reranked_nodes
+
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Erreur lors de l'appel à l'API de reranking : {e}")
+            # En cas d'échec, on retourne les nodes originaux, limités à top_n pour la cohérence
+            return nodes[:self.top_n]
+        except (KeyError, IndexError) as e:
+            print(f"❌ Erreur lors du parsing de la réponse du reranker : {e}")
+            return nodes[:self.top_n]

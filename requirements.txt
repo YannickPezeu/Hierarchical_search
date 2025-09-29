@@ -6,3 +6,21 @@ passlib[bcrypt]
 llama-index
 python-dotenv
 requests
+
+
+
+# Password Hashing
+passlib==1.7.4
+bcrypt==4.1.2
+# API Calls
+requests
+httpx
+
+# LlamaIndex Core and Components
+llama-index-llms-openai
+llama-index-embeddings-openai
+llama-index-vector-stores-faiss
+
+# Vector Store Backend
+faiss-cpu # Utilisez faiss-gpu si vous avez des GPUs sur votre cluster
+

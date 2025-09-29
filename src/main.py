@@ -8,21 +8,19 @@ from typing import List, Optional
 import requests
 from pydantic import BaseModel
 from passlib.context import CryptContext
-
-
-
-from src.settings import init_settings
-from src.components import FilterEmptyNodes, RepairRelationships, AddBreadcrumbs, ContextMerger, normalize_filename
+from starlette.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks, HTTPException, status
 
+from src.settings import init_settings
+from src.components import FilterEmptyNodes, RepairRelationships, AddBreadcrumbs, ContextMerger, normalize_filename, ApiReranker
 
 # --- Imports de notre logique RAG ---
+from llama_index.core import QueryBundle
 from llama_index.core.retrievers import AutoMergingRetriever
 from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import MarkdownNodeParser, SentenceSplitter
 from llama_index.core.schema import NodeRelationship, RelatedNodeInfo
-from collections import Counter # <--- Importation ajoutée
-
+from collections import Counter
 
 from llama_index.core import StorageContext, load_index_from_storage, VectorStoreIndex, SimpleDirectoryReader
 from llama_index.vector_stores.faiss import FaissVectorStore
@@ -32,15 +30,46 @@ import faiss
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# 1. Créer l'instance de l'application
 app = FastAPI(title="API de Recherche Sémantique")
+
+
+
+
+# 2. Définir une liste d'origines PROPRE et VALIDE
+# Une origine doit être une URL complète (avec http:// ou https://)
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:63342",
+    "http://localhost:63343",
+    "http://localhost:55310",
+    "http://localhost:63695",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:63342",
+    "http://127.0.0.1:63343",
+    "http://127.0.0.1:55310",
+    "http://127.0.0.1:63695",
+    "https://lex-chatbot.epfl.ch",
+    "https://lex-chatbot-test.epfl.ch",
+]
+
+# 3. Ajouter le middleware CORS AVANT toute autre chose
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- Le reste de la configuration de l'application ---
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 INDEX_CACHE = {}
+ALL_INDEXES_DIR = "./all_indexes"
+DOCLING_URL = "http://10.95.33.115:30842/v1/convert/file"
 
-
-# --- Variables de configuration ---
-ALL_INDEXES_DIR = "./all_indexes" # Dossier racine pour tous les index
-DOCLING_URL = "http://10.95.33.115:30842/v1/convert/file" # Assurez-vous que Docling est accessible
 
 # --- Modèles de données Pydantic ---
 class SearchRequest(BaseModel):
@@ -72,7 +101,72 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
+# src/main.py
+import re
 
+
+def should_reconstruct_hierarchy(markdown_text: str) -> bool:
+    """
+    Analyse le texte pour déterminer si la hiérarchie des titres doit être reconstruite.
+
+    Retourne True si des titres de niveau 2 (##) sont présents,
+    mais AUCUN titre de niveau 1 (#) ou 3 (###).
+    """
+    header_levels = set()
+    lines = markdown_text.splitlines()
+    for line in lines:
+        stripped_line = line.strip()
+        if stripped_line.startswith("#"):
+            if stripped_line.startswith("###"):
+                header_levels.add(3)
+            elif stripped_line.startswith("##"):
+                header_levels.add(2)
+            elif stripped_line.startswith("#"):
+                header_levels.add(1)
+
+    # La condition pour reconstruire : il y a des H2, mais ni H1, ni H3.
+    if 2 in header_levels and 1 not in header_levels and 3 not in header_levels:
+        logger.info("Diagnostic : Hiérarchie plate détectée (uniquement H2). Reconstruction nécessaire.")
+        return True
+
+    logger.info("Diagnostic : La hiérarchie des titres semble correcte. Aucune reconstruction n'est effectuée.")
+    return False
+
+
+def reconstruct_markdown_hierarchy(markdown_text: str) -> str:
+    """
+    Analyse un texte Markdown où tous les titres sont '##' et les remplace
+    par '#', '##', ou '###' en se basant sur des mots-clés et l'ordre correct.
+    """
+    repaired_lines = []
+    lines = markdown_text.splitlines()
+
+    for line in lines:
+        stripped_line = line.strip()
+        if stripped_line.startswith("## "):
+            title_text = stripped_line[3:]
+
+            # Règle pour les SECTIONS (deviennent H1)
+            if re.match(r"^SECTION\s", title_text, re.IGNORECASE):
+                repaired_lines.append(f"# {title_text}")
+            # Règle pour les CHAPITRES (deviennent H2)
+            elif re.match(r"^(CHAPITRE|TITRE)\s", title_text, re.IGNORECASE):
+                repaired_lines.append(f"## {title_text}")
+
+            # ▼▼▼ RÈGLE CORRIGÉE POUR LES ARTICLES ▼▼▼
+            # Elle reconnaît maintenant "Art. 34", "Art 34e", "Article 34", etc.
+            elif re.match(r"^Art(?:icle)?\.?\s+\d+", title_text, re.IGNORECASE):
+                repaired_lines.append(f"### {title_text}")
+            # ▲▲▲ FIN DE LA CORRECTION ▲▲▲
+
+            # Si aucune règle ne correspond, on garde le H2 par défaut
+            else:
+                repaired_lines.append(line)
+        else:
+            # Si ce n'est pas un titre, on garde la ligne telle quelle
+            repaired_lines.append(line)
+
+    return "\n".join(repaired_lines)
 
 
 # ... (autres imports)
@@ -193,7 +287,6 @@ async def create_index(
     os.makedirs(source_files_dir, exist_ok=True)
     # --- FIN DE LA LOGIQUE MODIFIÉE ---
 
-    # La suite est identique : on sauvegarde les fichiers uploadés dans source_files
     files_info = []
     for file in files:
         file_path = os.path.join(source_files_dir, file.filename)
@@ -289,9 +382,16 @@ def index_creation_task(
             response_data = json.loads(repaired_json_string)
             md_content = response_data.get("document", {}).get("md_content", "")
 
-            # --- Étape 3: Nettoyage et sauvegarde ---
-            logger.info(f"Nettoyage du contenu Markdown pour '{original_filename}'...")
-            cleaned_md = remove_duplicate_headers(md_content)
+
+            # On vérifie d'abord si le document a besoin d'être réparé
+            if should_reconstruct_hierarchy(md_content):
+                logger.info(f"Réparation de la hiérarchie du Markdown pour '{original_filename}'...")
+                md_content_final = reconstruct_markdown_hierarchy(md_content)
+            else:
+                md_content_final = md_content  # Pas de réparation, on garde l'original
+
+            # On utilise maintenant le contenu final (réparé ou non) pour la suite
+            cleaned_md = remove_duplicate_headers(md_content_final)
 
             source_url = metadata.get(original_filename, "URL non fournie")
 
@@ -323,10 +423,13 @@ def index_creation_task(
 
 # src/main.py
 
+# ... (tous les imports et les helpers restent les mêmes) ...
+
 @app.post("/search/{user_id}/{index_id}", response_model=List[SearchResultNode])
 async def search_in_index(user_id: str, index_id: str, request: SearchRequest):
     """
-    Effectue une recherche dans un index existant, en utilisant un cache en mémoire.
+    Effectue une recherche dans un index existant, en utilisant un cache en mémoire
+    et en appliquant un reranker pour améliorer la pertinence.
     """
     index_path = get_index_path(user_id, index_id)
     index_dir = os.path.join(index_path, "index")
@@ -334,7 +437,6 @@ async def search_in_index(user_id: str, index_id: str, request: SearchRequest):
     if not os.path.exists(index_dir):
         raise HTTPException(status_code=404, detail="Index non trouvé.")
 
-    # La vérification du mot de passe reste inchangée
     pw_file = os.path.join(index_path, ".pw_hash")
     if os.path.exists(pw_file):
         if not request.password:
@@ -344,54 +446,80 @@ async def search_in_index(user_id: str, index_id: str, request: SearchRequest):
         if not verify_password(request.password, hashed_password):
             raise HTTPException(status_code=403, detail="Mot de passe incorrect.")
 
-    # --- LOGIQUE DE CACHING MISE À JOUR ---
     if index_dir not in INDEX_CACHE:
-        # ▼▼▼ DÉBUT DU BLOC CORRIGÉ ▼▼▼
         logger.info(f"Index '{index_dir}' non trouvé dans le cache. Chargement spécifique à FAISS...")
         init_settings()
 
-        # 1. Charger l'index FAISS binaire depuis le fichier
-        # Le nom par défaut est 'default__vector_store.faiss'
         faiss_index_path = os.path.join(index_dir, "default__vector_store.json")
         if not os.path.exists(faiss_index_path):
             raise HTTPException(status_code=500, detail="Fichier d'index FAISS non trouvé. Veuillez ré-indexer.")
 
-        faiss_index = faiss.read_index(faiss_index_path)
+        # LlamaIndex >= 0.10.19 has read_index that takes a path directly
+        try:
+            faiss_index = faiss.read_index(faiss_index_path)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to load FAISS index file: {e}")
 
-        # 2. Créer le FaissVectorStore à partir de l'index chargé
         vector_store = FaissVectorStore(faiss_index=faiss_index)
-
-        # 3. Créer le StorageContext en spécifiant ce vector_store
-        #    et en indiquant à LlamaIndex de charger le reste (docstore, etc.) depuis le dossier
-        storage_context = StorageContext.from_defaults(
-            vector_store=vector_store,
-            persist_dir=index_dir
-        )
-
-        # 4. Charger l'index LlamaIndex principal à partir de ce contexte
+        storage_context = StorageContext.from_defaults(vector_store=vector_store, persist_dir=index_dir)
         index = load_index_from_storage(storage_context)
-        # ▲▲▲ FIN DU BLOC CORRIGÉ ▲▲▲
 
-        # Le reste de la logique de création du retriever ne change pas
-        base_retriever = index.as_retriever(similarity_top_k=5)
-        merging_retriever = AutoMergingRetriever(
-            vector_retriever=base_retriever,
-            storage_context=storage_context,
-        )
+        # ▼▼▼ MODIFIÉ ▼▼▼ : On récupère plus de documents (15) pour donner un meilleur choix au reranker.
+        base_retriever = index.as_retriever(similarity_top_k=15)
+        # ▲▲▲ FIN DE MODIFICATION ▲▲▲
+        merging_retriever = AutoMergingRetriever(vector_retriever=base_retriever, storage_context=storage_context)
+
         INDEX_CACHE[index_dir] = (merging_retriever, storage_context)
         logger.info(f"Index FAISS '{index_dir}' chargé et mis en cache.")
     else:
         logger.info(f"Index '{index_dir}' trouvé dans le cache.")
         merging_retriever, storage_context = INDEX_CACHE[index_dir]
 
-    # La logique de recherche et de post-processing reste la même
+    # --- NOUVELLE LOGIQUE DE RECHERCHE EN PLUSIEURS ÉTAPES ---
+
+    # 1. Récupération initiale
+    logger.info(f"Étape 1: Récupération initiale pour la requête: '{request.query}'")
     retrieved_nodes = merging_retriever.retrieve(request.query)
+    logger.info(f"-> {len(retrieved_nodes)} nodes récupérés.")
 
+    # 2. Reranking (si configuré)
+    query_bundle = QueryBundle(query_str=request.query)
+
+    # 2. Reranking (si configuré)
+    reranked_nodes = retrieved_nodes
+    rerank_api_base = os.getenv("RERANK_API_ENDPOINT")
+    rerank_api_key = os.getenv("RERANK_API_KEY")
+    rerank_model = os.getenv("RERANK_MODEL", "BAAI/bge-reranker-v2-m3")
+
+    if rerank_api_base and rerank_api_key:
+        logger.info(f"Étape 2: Reranking avec le modèle '{rerank_model}'...")
+        reranker = ApiReranker(
+            top_n=5,
+            model=rerank_model,
+            api_base=rerank_api_base,
+            api_key=rerank_api_key,
+        )
+        # On passe l'objet query_bundle complet
+        reranked_nodes = reranker.postprocess_nodes(retrieved_nodes, query_bundle=query_bundle)
+        logger.info(f"-> Reranking terminé. {len(reranked_nodes)} nodes conservés.")
+    else:
+        logger.warning("-> Étape 2 ignorée : Variables d'environnement pour le reranker non configurées.")
+
+    # 3. Fusion du contexte
+    logger.info("Étape 3: Fusion du contexte (ajout des voisins)...")
     context_merger = ContextMerger(docstore=storage_context.docstore)
-    add_breadcrumbs = AddBreadcrumbs()
+    # On passe aussi l'objet query_bundle ici
+    merged_nodes = context_merger.postprocess_nodes(reranked_nodes, query_bundle=query_bundle)
+    logger.info("-> Contexte fusionné.")
 
-    merged_nodes = context_merger.postprocess_nodes(retrieved_nodes, query_bundle=request.query)
-    final_nodes = add_breadcrumbs.postprocess_nodes(merged_nodes, query_bundle=request.query)
+    # 4. Ajout des breadcrumbs
+    logger.info("Étape 4: Ajout des breadcrumbs (Source > Contexte)...")
+    add_breadcrumbs = AddBreadcrumbs()
+    # Et ici aussi
+    final_nodes = add_breadcrumbs.postprocess_nodes(merged_nodes, query_bundle=query_bundle)
+    logger.info("-> Breadcrumbs ajoutés.")
+
+    # ▲▲▲ FIN DU BLOC CORRIGÉ ▲▲▲
 
     results = []
     for n in final_nodes:
@@ -405,3 +533,7 @@ async def search_in_index(user_id: str, index_id: str, request: SearchRequest):
         ))
 
     return results
+
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)
