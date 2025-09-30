@@ -131,8 +131,8 @@ def run_indexing_logic(source_md_dir: str, index_dir: str):
 
 # --- Background Task ---
 
-def index_creation_task(user_id: str, index_id: str, files_info: List[dict], metadata_json: str):
-    index_path = get_index_path(user_id, index_id)
+def index_creation_task(index_id: str, files_info: List[dict], metadata_json: str):
+    index_path = get_index_path(index_id)
     md_files_dir = os.path.join(index_path, "md_files")
     index_dir = os.path.join(index_path, "index")
     os.makedirs(md_files_dir, exist_ok=True)

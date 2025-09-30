@@ -1,10 +1,11 @@
 # src/routes/search.py
 import os
+import json
 import logging
 from typing import List
 
 import faiss
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header, Depends
 from llama_index.core import (
     StorageContext, load_index_from_storage, QueryBundle
 )
@@ -20,21 +21,122 @@ from src.core.utils import get_index_path, verify_password
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-router = APIRouter()
+# ✅ NOUVEAU : Récupérer l'API key depuis l'environnement
+INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY")
+
+if not INTERNAL_API_KEY:
+    logger.warning("⚠️ INTERNAL_API_KEY not set! API will be unsecured!")
 
 
-@router.post("/{user_id}/{index_id}", response_model=List[SearchResultNode])
-async def search_in_index(user_id: str, index_id: str, request: SearchRequest):
+# ✅ NOUVEAU : Dépendance pour vérifier l'API key
+async def verify_internal_api_key(x_api_key: str = Header(..., alias="X-API-Key")):
     """
-    Performs a search in an existing index, using an in-memory cache
-    and applying a reranker to improve relevance.
+    Vérifie que l'appel provient bien d'Open WebUI.
+    L'API key est un secret partagé entre Open WebUI et ce FastAPI.
     """
-    index_path = get_index_path(user_id, index_id)
+    if not INTERNAL_API_KEY:
+        logger.error("INTERNAL_API_KEY not configured on server")
+        raise HTTPException(
+            status_code=500,
+            detail="Server configuration error: API key not set"
+        )
+
+    if x_api_key != INTERNAL_API_KEY:
+        logger.warning(f"⚠️ Invalid API key attempt: {x_api_key[:10]}...")
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid API key. Only Open WebUI backend can access this endpoint."
+        )
+
+    logger.debug("✅ Valid API key - request from Open WebUI backend")
+    return True
+
+
+# ✅ NOUVEAU : Fonction pour récupérer les groupes autorisés d'une library
+def get_library_groups(index_id: str) -> List[str]:
+    """
+    Lit les groupes autorisés depuis un fichier metadata.
+    Ce fichier est créé lors de la création de la library.
+
+    Returns:
+        Liste des group_ids autorisés, ou [] si pas de restrictions
+    """
+    index_path = get_index_path(index_id)
+    groups_file = os.path.join(index_path, ".groups.json")
+
+    if not os.path.exists(groups_file):
+        logger.warning(
+            f"No .groups.json file for library {index_id}. "
+            f"This library has no group restrictions (legacy or public)."
+        )
+        return []  # Pas de restrictions = accessible à tous (pour migration)
+
+    try:
+        with open(groups_file, "r") as f:
+            data = json.load(f)
+            groups = data.get("groups", [])
+            logger.info(f"Library {index_id} authorized groups: {groups}")
+            return groups
+    except Exception as e:
+        logger.error(f"Failed to read groups file for {index_id}: {e}")
+        return []
+
+
+# ✅ MODIFIÉ : Route de recherche avec vérification des groupes
+@router.post("/{index_id}", response_model=List[SearchResultNode])
+async def search_in_index(
+        index_id: str,
+        request: SearchRequest,
+        _: bool = Depends(verify_internal_api_key)  # ✅ Vérifie l'API key
+):
+    """
+    Performs a search in an existing index with group-based permissions.
+
+    This endpoint should ONLY be called by Open WebUI backend, which:
+    1. Verifies the user's JWT token
+    2. Fetches the user's groups from its database
+    3. Sends the verified groups in the request body
+
+    Args:
+        index_id: The library/index identifier
+        request: Contains query, user_groups (verified by Open WebUI), and optional password
+
+    Returns:
+        List of search results with scores and metadata
+    """
+    logger.info(f"🔍 Search request for library: {index_id}")
+    logger.info(f"👥 User groups (verified by Open WebUI): {request.user_groups}")
+
+    # ✅ Vérifier les permissions basées sur les groupes
+    library_groups = get_library_groups(index_id)
+
+    if library_groups:  # Si la library a des restrictions de groupes
+        user_group_set = set(request.user_groups)
+        library_group_set = set(library_groups)
+
+        # Vérifier l'intersection
+        if not user_group_set.intersection(library_group_set):
+            logger.warning(
+                f"❌ Access denied for groups {request.user_groups} "
+                f"to library {index_id} (requires: {library_groups})"
+            )
+            raise HTTPException(
+                status_code=403,
+                detail=f"Access denied. This library requires membership in one of these groups: {library_groups}"
+            )
+
+        logger.info(f"✅ Access granted - user has required group membership")
+    else:
+        logger.info(f"ℹ️ Library {index_id} has no group restrictions")
+
+    index_path = get_index_path(index_id)
     index_dir = os.path.join(index_path, "index")
 
     if not os.path.exists(index_dir):
+        logger.error(f"❌ Index directory not found: {index_dir}")
         raise HTTPException(status_code=404, detail="Index not found.")
 
+    # ✅ Vérification du mot de passe (optionnel, pour compatibilité)
     pw_file = os.path.join(index_path, ".pw_hash")
     if os.path.exists(pw_file):
         if not request.password:
@@ -44,6 +146,7 @@ async def search_in_index(user_id: str, index_id: str, request: SearchRequest):
         if not verify_password(request.password, hashed_password):
             raise HTTPException(status_code=403, detail="Incorrect password.")
 
+    # ✅ Le reste de ton code de recherche reste identique
     if index_dir not in INDEX_CACHE:
         logger.info(f"Index '{index_dir}' not in cache. Loading from FAISS...")
         init_settings()
@@ -88,51 +191,41 @@ async def search_in_index(user_id: str, index_id: str, request: SearchRequest):
             enhanced_doc = f"[Document: {file_name} | Section: {breadcrumb}]\n\n{n.node.get_content()}"
             documents_to_rerank.append(enhanced_doc)
 
-        # Create reranker with custom documents
         reranker = ApiReranker(
             top_n=5,
             model=rerank_model,
             api_base=rerank_api_base,
             api_key=rerank_api_key,
-            custom_documents=documents_to_rerank  # Pass as constructor param
+            custom_documents=documents_to_rerank
         )
 
-        # Call with standard signature
         reranked_nodes = reranker.postprocess_nodes(retrieved_nodes, query_bundle=query_bundle)
         logger.info(f"-> Reranking complete. {len(reranked_nodes)} nodes kept.")
     else:
         logger.warning("-> Step 2 skipped: Reranker environment variables not configured.")
 
-    # ▼▼▼ NOUVEAU BLOC : Sauvegarde du contenu principal AVANT la fusion ▼▼▼
-    # On crée un dictionnaire qui associe l'ID de chaque nœud à son contenu original.
     main_content_map = {n.node.node_id: n.node.get_content() for n in reranked_nodes}
-    # ▲▲▲ FIN DU NOUVEAU BLOC ▲▲▲
 
     logger.info("Step 3: Merging context (adding neighbors)...")
     context_merger = ContextMerger(docstore=storage_context.docstore)
     final_nodes = context_merger.postprocess_nodes(reranked_nodes, query_bundle=query_bundle)
-
 
     results = []
     for n in final_nodes:
         title = n.node.metadata.get("Header 2", n.node.metadata.get("Header 1", n.node.metadata.get("file_name",
                                                                                                     "Title not found")))
 
-        # 1. On récupère l'ID original depuis les métadonnées du noeud fusionné
         original_id = n.node.metadata.get('original_node_id')
-
-        # 2. On utilise cet ID pour la recherche dans notre dictionnaire
-        # S'il n'y a pas d'ID, on renvoie une chaîne vide ou un message d'erreur
         main_content = main_content_map.get(original_id, "") if original_id else "Contenu principal non trouvé"
 
         results.append(SearchResultNode(
-            content_with_context=n.node.get_content(),  # Contenu fusionné (correct)
-            main_content=main_content,  # Contenu original retrouvé grâce à l'ID (correct)
+            content_with_context=n.node.get_content(),
+            main_content=main_content,
             score=n.score,
             title=str(title),
             source_url=n.node.metadata.get("source_url", "URL not found"),
-            header_path = n.node.metadata.get("header_path", "/")
-
+            header_path=n.node.metadata.get("header_path", "/")
         ))
 
+    logger.info(f"✅ Search complete. Returning {len(results)} results.")
     return results

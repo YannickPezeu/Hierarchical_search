@@ -4,18 +4,16 @@ from pydantic import BaseModel
 
 class SearchRequest(BaseModel):
     query: str
+    user_groups: List[str]  # ✅ NOUVEAU : Groupes vérifiés par Open WebUI
     password: Optional[str] = None
 
 class SearchResultNode(BaseModel):
-    # ▼▼▼ MODIFIÉ ▼▼▼
-    content_with_context: str   # Le contenu complet avec les paragraphes voisins
-    main_content: str           # Uniquement le contenu du paragraphe principal trouvé
-    # ▲▲▲ FIN DE LA MODIFICATION ▲▲▲
+    content_with_context: str
+    main_content: str
     score: Optional[float]
     title: str
     source_url: str
     header_path: Optional[str] = None
-
 
 class IndexResponse(BaseModel):
     status: str
