@@ -83,14 +83,25 @@ class AddBreadcrumbs(BaseNodePostprocessor):
 
         return nodes
 
+
+from llama_index.core.schema import TextNode
+
+
+# Assurez-vous d'avoir tous les imports nécessaires en haut de votre fichier
+# from llama_index.core.postprocessor.types import BaseNodePostprocessor
+# from llama_index.core.schema import NodeWithScore, QueryBundle
+# from llama_index.core.storage.docstore.types import BaseDocumentStore
+# from typing import List, Optional
+
 class ContextMerger(BaseNodePostprocessor):
     """
-    Fusionne chaque node avec ses voisins (précédent et suivant) 
+    Fusionne chaque node avec ses voisins (précédent et suivant)
     pour créer un seul node de contexte étendu.
     """
     docstore: BaseDocumentStore
 
-    def _postprocess_nodes(self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle] = None) -> List[NodeWithScore]:
+    def _postprocess_nodes(self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle] = None) -> List[
+        NodeWithScore]:
         if not nodes:
             return []
 
@@ -99,24 +110,33 @@ class ContextMerger(BaseNodePostprocessor):
 
         for node_with_score in nodes:
             original_node = node_with_score.node
-            
+
             # Récupérer les textes des voisins
-            prev_text = docstore.get_node(original_node.prev_node.node_id).get_content() if original_node.prev_node else ""
-            next_text = docstore.get_node(original_node.next_node.node_id).get_content() if original_node.next_node else ""
-            
+            prev_text = docstore.get_node(
+                original_node.prev_node.node_id).get_content() if original_node.prev_node else ""
+            next_text = docstore.get_node(
+                original_node.next_node.node_id).get_content() if original_node.next_node else ""
+
             # Concaténer les textes
             merged_text = f"{prev_text}\n\n---\n\n{original_node.get_content()}\n\n---\n\n{next_text}".strip()
-            
-            # Créer un nouveau node fusionné
+
+            # ▼▼▼ MODIFICATION ▼▼▼
+            # On copie les métadonnées pour ne pas modifier l'original
+            new_metadata = original_node.metadata.copy()
+            # On ajoute l'ID original dans les métadonnées du nouveau noeud
+            new_metadata['original_node_id'] = original_node.node_id
+
+            # Créer un nouveau node fusionné en utilisant les nouvelles métadonnées
             merged_node = NodeWithScore(
                 node=TextNode(
                     text=merged_text,
-                    metadata=original_node.metadata # On garde les métadonnées du node central
+                    metadata=new_metadata  # Utilisation des métadonnées enrichies
                 ),
-                score=node_with_score.score # On garde le score du node central
+                score=node_with_score.score  # On garde le score du node central
             )
+            # ▲▲▲ FIN DE LA MODIFICATION ▲▲▲
             merged_nodes.append(merged_node)
-            
+
         return merged_nodes
 
 def remove_duplicate_headers(markdown_text: str) -> str:
@@ -187,30 +207,28 @@ from collections import Counter
 # ▼▼▼ NOUVELLE CLASSE AJOUTÉE À LA FIN DU FICHIER ▼▼▼
 
 class ApiReranker(BaseNodePostprocessor):
-    """
-    Post-processeur de nodes qui utilise une API externe pour re-classer
-    les résultats en fonction de leur pertinence par rapport à la requête.
-    """
     top_n: int = 5
     model: str
     api_base: str
     api_key: str
+    custom_documents: Optional[List[str]] = None  # NEW: Store custom docs
 
     def _postprocess_nodes(
             self,
             nodes: List[NodeWithScore],
             query_bundle: Optional[QueryBundle] = None,
     ) -> List[NodeWithScore]:
-        """
-        Envoie les nodes à l'API de reranking et retourne la liste
-        ré-ordonnée et re-scorée.
-        """
         if query_bundle is None or not nodes:
             print("⚠️ Reranker : Requête ou nodes manquants, étape ignorée.")
             return nodes
 
         query_str = query_bundle.query_str
-        documents_to_rerank = [n.node.get_content() for n in nodes]
+
+        # Use custom_documents if set, otherwise extract from nodes
+        if self.custom_documents is not None:
+            documents_to_rerank = self.custom_documents
+        else:
+            documents_to_rerank = [n.node.get_content() for n in nodes]
 
         rerank_url = f"{self.api_base}/rerank"
         headers = {
@@ -221,7 +239,7 @@ class ApiReranker(BaseNodePostprocessor):
             "model": self.model,
             "query": query_str,
             "documents": documents_to_rerank,
-            "top_k": self.top_n,  # L'API retournera les `top_k` meilleurs résultats
+            "top_k": self.top_n,
         }
 
         try:
@@ -236,7 +254,6 @@ class ApiReranker(BaseNodePostprocessor):
                 new_score = res.get("relevance_score")
 
                 if original_index is not None and new_score is not None:
-                    # Créer un nouvel objet NodeWithScore avec le score mis à jour
                     reranked_node = NodeWithScore(
                         node=nodes[original_index].node,
                         score=new_score
@@ -248,7 +265,6 @@ class ApiReranker(BaseNodePostprocessor):
 
         except requests.exceptions.RequestException as e:
             print(f"❌ Erreur lors de l'appel à l'API de reranking : {e}")
-            # En cas d'échec, on retourne les nodes originaux, limités à top_n pour la cohérence
             return nodes[:self.top_n]
         except (KeyError, IndexError) as e:
             print(f"❌ Erreur lors du parsing de la réponse du reranker : {e}")
