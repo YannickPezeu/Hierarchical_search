@@ -14,6 +14,8 @@ class SearchResultNode(BaseModel):
     title: str
     source_url: str
     header_path: Optional[str] = None
+    file_url: Optional[str] = None  # Ex: "/files/lib123/document.pdf"
+    file_type: Optional[str] = None  # Ex: "pdf", "docx", "html"
 
 class IndexResponse(BaseModel):
     status: str

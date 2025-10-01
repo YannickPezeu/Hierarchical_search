@@ -1,6 +1,8 @@
 # src/components.py (VERSION FINALE CORRIGÉE)
+import re
 import urllib.parse
 
+import unicodedata
 from llama_index.core.schema import TransformComponent, NodeWithScore, QueryBundle, NodeRelationship, RelatedNodeInfo, TextNode
 from llama_index.core.postprocessor.types import BaseNodePostprocessor # Votre import correct
 from typing import List, Optional
@@ -158,20 +160,45 @@ def remove_duplicate_headers(markdown_text: str) -> str:
     return "\n".join(cleaned_lines)
 
 
+import re
+import unicodedata
+import urllib.parse
+import os
+
 def normalize_filename(filename: str) -> str:
     """
-    Normalise un nom de fichier de manière universelle :
-    1. Décode les caractères d'URL (ex: %20 -> espace).
-    2. Remplace les différents types d'apostrophes par un underscore.
+    Normalise un nom de fichier de manière universelle et sûre pour les URLs.
+    Remplace TOUS les caractères non-ASCII par leur équivalent ASCII ou underscore.
     """
-    # Étape 1: Décoder les caractères d'URL
-    name = urllib.parse.unquote(filename)
+    # Étape 1: Décoder les caractères d'URL si présents
+    if '%' in filename:
+        name = urllib.parse.unquote(filename)
+    else:
+        name = filename
 
-    # Étape 2: Remplacer les apostrophes (notre logique précédente)
-    name = name.replace("’", "_")
-    name = name.replace("'", "_")
+    # Étape 2: Séparer le nom et l'extension
+    base_name, extension = os.path.splitext(name)
 
-    return name
+    # Étape 3: Convertir les caractères Unicode en ASCII (ü -> u, é -> e, etc.)
+    base_name = unicodedata.normalize('NFKD', base_name)
+    base_name = base_name.encode('ascii', 'ignore').decode('ascii')
+
+    # Étape 4: Remplacer les espaces par des underscores
+    base_name = base_name.replace(" ", "_")
+
+    # Étape 5: Ne garder que alphanumériques, points, underscores et tirets
+    base_name = re.sub(r'[^a-zA-Z0-9._-]', '_', base_name)
+
+    # Étape 6: Réduire les underscores multiples
+    base_name = re.sub(r'_+', '_', base_name)
+
+    # Étape 7: Nettoyer début/fin
+    base_name = base_name.strip('_')
+
+    # Reconstituer avec l'extension
+    return base_name + extension
+
+
 
 class CleanHeaders(TransformComponent):
     """
@@ -261,7 +288,7 @@ class ApiReranker(BaseNodePostprocessor):
                     reranked_nodes.append(reranked_node)
 
             print(f"✅ Reranking réussi. {len(reranked_nodes)} nodes conservés.")
-            return reranked_nodes
+            return reranked_nodes[:self.top_n]
 
         except requests.exceptions.RequestException as e:
             print(f"❌ Erreur lors de l'appel à l'API de reranking : {e}")
@@ -269,3 +296,8 @@ class ApiReranker(BaseNodePostprocessor):
         except (KeyError, IndexError) as e:
             print(f"❌ Erreur lors du parsing de la réponse du reranker : {e}")
             return nodes[:self.top_n]
+
+if __name__ == '__main__':
+    test = "1.4.0.1_Richtlinie%20%C3%BCber%20das%20Kontinuit%C3%A4tsmanagement%20Bund_f.pdf"
+    print(normalize_filename(test))
+    # Devrait donner : 1.4.0.1_Richtlinie_uber_das_Kontinuitatsmanagement_Bund_f.pdf

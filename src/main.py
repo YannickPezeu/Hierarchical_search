@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 # Import the router objects from your route files
-from src.routes import index, search
+from src.routes import index, search, files
 
 # --- Configuration ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -39,9 +39,9 @@ app.add_middleware(
 # The tags group the routes nicely in the OpenAPI docs (/docs).
 app.include_router(index.router, prefix="/index", tags=["Indexing"])
 app.include_router(search.router, prefix="/search", tags=["Searching"])
-
+app.include_router(files.router, prefix="/files", tags=["File Serving"])
 
 # 5. Main execution block
 if __name__ == '__main__':
     # Note the path to the app object: "src.main:app"
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("src.main:app", host="0.0.0.0", port=8079, reload=True)

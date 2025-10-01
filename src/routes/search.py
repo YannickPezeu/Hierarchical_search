@@ -13,10 +13,11 @@ from llama_index.core.retrievers import AutoMergingRetriever
 from llama_index.vector_stores.faiss import FaissVectorStore
 
 from src.settings import init_settings
-from src.components import ContextMerger, ApiReranker
+from src.components import ContextMerger, ApiReranker, normalize_filename
 from src.core.config import INDEX_CACHE
 from src.core.models import SearchRequest, SearchResultNode
 from src.core.utils import get_index_path, verify_password
+import glob
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -163,7 +164,7 @@ async def search_in_index(
         storage_context = StorageContext.from_defaults(vector_store=vector_store, persist_dir=index_dir)
         index = load_index_from_storage(storage_context)
 
-        base_retriever = index.as_retriever(similarity_top_k=15)
+        base_retriever = index.as_retriever(similarity_top_k=50)
         merging_retriever = AutoMergingRetriever(vector_retriever=base_retriever, storage_context=storage_context)
         INDEX_CACHE[index_dir] = (merging_retriever, storage_context)
         logger.info(f"FAISS index '{index_dir}' loaded and cached.")
@@ -192,7 +193,7 @@ async def search_in_index(
             documents_to_rerank.append(enhanced_doc)
 
         reranker = ApiReranker(
-            top_n=5,
+            top_n=15,
             model=rerank_model,
             api_base=rerank_api_base,
             api_key=rerank_api_key,
@@ -201,6 +202,20 @@ async def search_in_index(
 
         reranked_nodes = reranker.postprocess_nodes(retrieved_nodes, query_bundle=query_bundle)
         logger.info(f"-> Reranking complete. {len(reranked_nodes)} nodes kept.")
+
+        # ✅ Filtrer les résultats avec score < 0.15, mais garder au moins 1 résultat
+        filtered_nodes = [n for n in reranked_nodes if n.score >= 0.15]
+
+        if filtered_nodes:
+            reranked_nodes = filtered_nodes
+            logger.info(f"-> After score filtering (>= 0.15): {len(reranked_nodes)} nodes kept.")
+        else:
+            # Garder au moins le meilleur résultat même si son score < 0.15
+            if reranked_nodes:
+                reranked_nodes = [reranked_nodes[0]]
+                logger.warning(f"-> All scores < 0.15. Keeping best result with score {reranked_nodes[0].score:.3f}")
+            else:
+                logger.warning("-> No results after reranking.")
     else:
         logger.warning("-> Step 2 skipped: Reranker environment variables not configured.")
 
@@ -210,13 +225,51 @@ async def search_in_index(
     context_merger = ContextMerger(docstore=storage_context.docstore)
     final_nodes = context_merger.postprocess_nodes(reranked_nodes, query_bundle=query_bundle)
 
+    # src/routes/search.py
+
     results = []
     for n in final_nodes:
-        title = n.node.metadata.get("Header 2", n.node.metadata.get("Header 1", n.node.metadata.get("file_name",
-                                                                                                    "Title not found")))
+        title = n.node.metadata.get("Header 2",
+                                    n.node.metadata.get("Header 1",
+                                                        n.node.metadata.get("file_name", "Title not found")))
 
         original_id = n.node.metadata.get('original_node_id')
         main_content = main_content_map.get(original_id, "") if original_id else "Contenu principal non trouvé"
+
+        # ✅ NOUVEAU : Trouver le fichier source original dans source_files_archive
+        file_name = n.node.metadata.get("file_name", "")
+        source_filename = None
+
+        if file_name:
+            # Extraire le nom de base sans extension .md
+            filename_base = os.path.splitext(file_name)[0]
+
+            # Chercher dans source_files_archive
+            archive_dir = os.path.join(index_path, "source_files")
+            pattern = os.path.join(archive_dir, f"{filename_base}.*")
+            matching_files = glob.glob(pattern)
+
+            # Filtrer pour éviter les faux positifs
+            exact_matches = [
+                f for f in matching_files
+                if os.path.splitext(os.path.basename(f))[0] == filename_base
+            ]
+
+            if exact_matches:
+                # Prendre le premier (il ne devrait y en avoir qu'un seul)
+                source_filename = os.path.basename(exact_matches[0])
+                logger.debug(f"Found source file: {file_name} -> {source_filename}")
+
+        # Utiliser source_filename si trouvé, sinon fallback sur file_name
+        if source_filename:
+            file_url = f"{source_filename}"
+            file_type = os.path.splitext(source_filename)[1].lower().lstrip('.')
+        elif file_name:
+            file_url = f"{file_name}"
+            file_type = os.path.splitext(file_name)[1].lower().lstrip('.')
+        else:
+            file_url = None
+            file_type = None
 
         results.append(SearchResultNode(
             content_with_context=n.node.get_content(),
@@ -224,7 +277,9 @@ async def search_in_index(
             score=n.score,
             title=str(title),
             source_url=n.node.metadata.get("source_url", "URL not found"),
-            header_path=n.node.metadata.get("header_path", "/")
+            header_path=n.node.metadata.get("header_path", "/"),
+            file_url=file_url,
+            file_type=file_type
         ))
 
     logger.info(f"✅ Search complete. Returning {len(results)} results.")

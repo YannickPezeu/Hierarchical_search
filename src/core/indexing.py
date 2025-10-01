@@ -135,18 +135,44 @@ def index_creation_task(index_id: str, files_info: List[dict], metadata_json: st
     index_path = get_index_path(index_id)
     md_files_dir = os.path.join(index_path, "md_files")
     index_dir = os.path.join(index_path, "index")
+    source_files_archive = os.path.join(index_path, "source_files")
+
     os.makedirs(md_files_dir, exist_ok=True)
+    os.makedirs(source_files_archive, exist_ok=True)
+
     try:
         metadata = json.loads(metadata_json) if metadata_json else {}
+        seen_basenames = set()
+
         for file_info in files_info:
             file_path = file_info["path"]
             original_filename = file_info["filename"]
-            normalized_basename, _ = os.path.splitext(normalize_filename(original_filename))
+            normalized_basename, ext = os.path.splitext(normalize_filename(original_filename))
+
+            # Vérifier les doublons
+            if normalized_basename in seen_basenames:
+                logger.error(f"Duplicate filename detected: {normalized_basename}")
+                raise ValueError(
+                    f"Cannot index multiple files with the same base name: {normalized_basename}"
+                )
+            seen_basenames.add(normalized_basename)
+
+            # Archiver le fichier source
+            archived_filename = f"{normalized_basename}{ext}"
+            archive_destination = os.path.join(source_files_archive, archived_filename)
+            if file_path != archive_destination:
+                shutil.copy2(file_path, archive_destination)
+            logger.info(f"File archived: {archived_filename} ({ext})")
+
+            # Préparer le fichier Markdown
             md_filename = f"{normalized_basename}.md"
             md_filepath = os.path.join(md_files_dir, md_filename)
+
             if os.path.exists(md_filepath):
                 logger.info(f"Markdown file '{md_filename}' already exists. Skipping Docling conversion.")
                 continue
+
+            # Conversion via Docling
             logger.info(f"Converting file '{original_filename}' via Docling...")
             try:
                 with open(file_path, "rb") as f:
@@ -160,6 +186,7 @@ def index_creation_task(index_id: str, files_info: List[dict], metadata_json: st
                 logger.error(f"Docling connection error for '{original_filename}': {req_err}")
                 continue
 
+            # Traitement de la réponse
             raw_response_text = response.text
             try:
                 repaired_json_string = raw_response_text.encode('latin-1').decode('utf-8')
@@ -169,18 +196,25 @@ def index_creation_task(index_id: str, files_info: List[dict], metadata_json: st
             response_data = json.loads(repaired_json_string)
             md_content = response_data.get("document", {}).get("md_content", "")
 
+            # Nettoyage du Markdown
             md_content_final = reconstruct_markdown_hierarchy(md_content) if should_reconstruct_hierarchy(
                 md_content) else md_content
             cleaned_md = remove_duplicate_headers(md_content_final)
             source_url = metadata.get(original_filename, "URL not provided")
 
+            # Sauvegarder le Markdown et les métadonnées
             meta_filepath = os.path.join(md_files_dir, f"{md_filename}.meta")
             with open(md_filepath, "w", encoding="utf-8") as f:
                 f.write(cleaned_md)
             with open(meta_filepath, "w", encoding="utf-8") as f:
-                json.dump({"source_url": source_url}, f)
+                json.dump({
+                    "source_url": source_url,
+                    "source_filename": archived_filename
+                }, f)
 
+        # Lancer l'indexation
         run_indexing_logic(source_md_dir=md_files_dir, index_dir=index_dir)
+
     except Exception as e:
         logger.error(f"Error during indexing task for '{index_path}': {e}", exc_info=True)
         if os.path.exists(index_dir):
