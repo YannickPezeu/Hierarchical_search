@@ -160,5 +160,5 @@ if __name__ == '__main__':
 
     # try_search_wrong_password(client)
     try_create_index_from_existing_files(client)
-    try_search_index_success(client)
+    # try_search_index_success(client)
     # try_search_index_success_api()

@@ -21,7 +21,8 @@ from llama_index.vector_stores.faiss import FaissVectorStore
 
 # Local Project Imports
 from src.settings import init_settings
-from src.components import FilterEmptyNodes, RepairRelationships, normalize_filename
+from src.components import RepairRelationships, normalize_filename, MergeSmallNodes, \
+    FilterTableOfContentsWithLLM
 from src.core.config import DOCLING_URL
 from src.core.utils import get_index_path
 
@@ -89,47 +90,100 @@ def remove_duplicate_headers(markdown_text: str) -> str:
 
 # --- Core Indexing Logic ---
 
+# Dans src/core/indexing.py
+# Remplacer la fonction run_indexing_logic par ceci:
+
+# Dans src/core/indexing.py
+# Remplacer la fonction run_indexing_logic par ceci:
+
 def run_indexing_logic(source_md_dir: str, index_dir: str):
     logger.info(f"Starting LlamaIndex indexing for directory: {source_md_dir}")
     init_settings()
+
+    # Pipeline de transformation
     pipeline = IngestionPipeline(
         transformations=[
             MarkdownNodeParser(include_metadata=True, include_prev_next_rel=True),
-            FilterEmptyNodes(min_length=30, min_lines=3),
+            FilterTableOfContentsWithLLM(),
+            # MergeSmallNodes crée maintenant une hiérarchie à 2 niveaux:
+            # tiny (< 200) -> child (1000-2000) -> parent (2000-5000)
+            # Les tiny nodes sont jetés après fusion
+            MergeSmallNodes(
+                tiny_size=200,
+                child_min_size=1000,
+                child_max_size=2000,
+                parent_min_size=2000,
+                parent_max_size=5000
+            ),
             RepairRelationships(),
         ]
     )
+
     documents = SimpleDirectoryReader(source_md_dir).load_data()
-    parent_nodes = pipeline.run(documents=documents)
-    child_splitter = SentenceSplitter(chunk_size=512, chunk_overlap=50)
-    all_nodes = []
+    all_nodes = pipeline.run(documents=documents)
+
+    # Séparer child nodes et parent nodes
     child_nodes = []
-    for parent_node in parent_nodes:
-        sub_nodes = child_splitter.get_nodes_from_documents([parent_node])
-        header_metadata = {
-            k: v for k, v in parent_node.metadata.items()
-            if k.startswith("Header") or k == "header_path"
-        }
+    parent_nodes = []
 
-        for sub_node in sub_nodes:
-            sub_node.relationships[NodeRelationship.PARENT] = RelatedNodeInfo(node_id=parent_node.id_)
-            sub_node.metadata.update(header_metadata)  # Copy header metadata to child
+    for node in all_nodes:
+        if NodeRelationship.PARENT in node.relationships:
+            # Ce node a un parent, c'est donc un child
+            child_nodes.append(node)
+        else:
+            # Ce node n'a pas de parent, c'est donc un parent
+            parent_nodes.append(node)
 
-            child_nodes.append(sub_node)
-        all_nodes.append(parent_node)
-        all_nodes.extend(sub_nodes)
+    logger.info(f"📊 Hiérarchie créée:")
+    logger.info(f"  • Child nodes (1000-2000 chars): {len(child_nodes)}")
+    logger.info(f"  • Parent nodes (2000-5000 chars): {len(parent_nodes)}")
 
+    # Créer des sub-chunks (512 tokens) UNIQUEMENT à partir des CHILD nodes pour l'embedding
+    child_splitter = SentenceSplitter(chunk_size=512, chunk_overlap=50)
+    sub_chunks = []
+
+    logger.info(f"📦 Création des sub-chunks pour l'indexation...")
+    for child_node in child_nodes:
+        chunks = child_splitter.get_nodes_from_documents([child_node])
+
+        # Chaque sub-chunk pointe vers son child node parent
+        for chunk in chunks:
+            chunk.relationships[NodeRelationship.PARENT] = RelatedNodeInfo(node_id=child_node.id_)
+            # Copier les metadata importantes
+            chunk.metadata.update({
+                k: v for k, v in child_node.metadata.items()
+                if k.startswith("Header") or k in ["header_path", "file_name", "source_url"]
+            })
+            sub_chunks.append(chunk)
+
+    logger.info(f"  • Sub-chunks créés: {len(sub_chunks)}")
+
+    # Créer l'index vectoriel
     d = 4096
     faiss_index = faiss.IndexFlatL2(d)
     vector_store = FaissVectorStore(faiss_index=faiss_index)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    storage_context.docstore.add_documents(all_nodes)
-    index = VectorStoreIndex(nodes=child_nodes, storage_context=storage_context)
+
+    # Ajouter TOUS les nodes au docstore (sub-chunks, children, parents)
+    # Nécessaire pour remonter la hiérarchie lors du retrieval
+    all_nodes_for_docstore = sub_chunks + child_nodes + parent_nodes
+    storage_context.docstore.add_documents(all_nodes_for_docstore)
+
+    logger.info(f"📦 Docstore:")
+    logger.info(f"  • Sub-chunks (embedding): {len(sub_chunks)}")
+    logger.info(f"  • Child nodes: {len(child_nodes)}")
+    logger.info(f"  • Parent nodes: {len(parent_nodes)}")
+    logger.info(f"  • TOTAL: {len(all_nodes_for_docstore)}")
+
+    # Indexer UNIQUEMENT les sub-chunks pour l'embedding vectoriel
+    index = VectorStoreIndex(nodes=sub_chunks, storage_context=storage_context)
     index.storage_context.persist(persist_dir=index_dir)
-    logger.info(f"FAISS indexing complete and saved to: {index_dir}")
 
+    logger.info(f"✅ Indexation complète:")
+    logger.info(f"  • Vector index: {len(sub_chunks)} sub-chunks indexés")
+    logger.info(f"  • Docstore: {len(all_nodes_for_docstore)} nodes stockés")
+    logger.info(f"  • Hiérarchie: sub-chunk -> child -> parent")
 
-# --- Background Task ---
 
 def index_creation_task(index_id: str, files_info: List[dict], metadata_json: str):
     index_path = get_index_path(index_id)

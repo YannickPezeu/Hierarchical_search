@@ -1,4 +1,3 @@
-# src/routes/search.py
 import os
 import json
 import logging
@@ -10,10 +9,11 @@ from llama_index.core import (
     StorageContext, load_index_from_storage, QueryBundle
 )
 from llama_index.core.retrievers import AutoMergingRetriever
+from llama_index.core.schema import NodeRelationship, NodeWithScore
 from llama_index.vector_stores.faiss import FaissVectorStore
 
 from src.settings import init_settings
-from src.components import ContextMerger, ApiReranker, normalize_filename
+from src.components import ApiReranker
 from src.core.config import INDEX_CACHE
 from src.core.models import SearchRequest, SearchResultNode
 from src.core.utils import get_index_path, verify_password
@@ -22,19 +22,14 @@ import glob
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# ✅ NOUVEAU : Récupérer l'API key depuis l'environnement
 INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY")
 
 if not INTERNAL_API_KEY:
     logger.warning("⚠️ INTERNAL_API_KEY not set! API will be unsecured!")
 
 
-# ✅ NOUVEAU : Dépendance pour vérifier l'API key
 async def verify_internal_api_key(x_api_key: str = Header(..., alias="X-API-Key")):
-    """
-    Vérifie que l'appel provient bien d'Open WebUI.
-    L'API key est un secret partagé entre Open WebUI et ce FastAPI.
-    """
+    """Vérifie que l'appel provient bien d'Open WebUI."""
     if not INTERNAL_API_KEY:
         logger.error("INTERNAL_API_KEY not configured on server")
         raise HTTPException(
@@ -53,14 +48,10 @@ async def verify_internal_api_key(x_api_key: str = Header(..., alias="X-API-Key"
     return True
 
 
-# ✅ NOUVEAU : Fonction pour récupérer les groupes autorisés d'une library
 def get_library_groups(index_id: str) -> List[str]:
     """
     Lit les groupes autorisés depuis un fichier metadata.
-    Ce fichier est créé lors de la création de la library.
-
-    Returns:
-        Liste des group_ids autorisés, ou [] si pas de restrictions
+    Returns: Liste des group_ids autorisés, ou [] si pas de restrictions
     """
     index_path = get_index_path(index_id)
     groups_file = os.path.join(index_path, ".groups.json")
@@ -70,7 +61,7 @@ def get_library_groups(index_id: str) -> List[str]:
             f"No .groups.json file for library {index_id}. "
             f"This library has no group restrictions (legacy or public)."
         )
-        return []  # Pas de restrictions = accessible à tous (pour migration)
+        return []
 
     try:
         with open(groups_file, "r") as f:
@@ -83,204 +74,339 @@ def get_library_groups(index_id: str) -> List[str]:
         return []
 
 
-# ✅ MODIFIÉ : Route de recherche avec vérification des groupes
+# Ajouter cette fonction helper au début du fichier search.py
+from llama_index.core.schema import NodeRelationship
+
+
+def get_child_and_parent_from_subchunk(subchunk_node, docstore) -> tuple:
+    """
+    Remonte la hiérarchie complète depuis un sub-chunk.
+
+    Hiérarchie: sub-chunk → child node → parent node
+
+    Returns:
+        (child_node, parent_node, hierarchy_info)
+        ou (None, None, error_msg) si erreur
+    """
+    # Étape 1: Remonter du sub-chunk vers le child node
+    if NodeRelationship.PARENT not in subchunk_node.relationships:
+        return None, None, "sub-chunk has no parent (child node)"
+
+    child_node_id = subchunk_node.relationships[NodeRelationship.PARENT].node_id
+    try:
+        child_node = docstore.get_node(child_node_id)
+    except Exception as e:
+        return None, None, f"Cannot find child node {child_node_id}: {e}"
+
+    # Étape 2: Remonter du child node vers le parent node
+    if NodeRelationship.PARENT not in child_node.relationships:
+        # Le child n'a pas de parent (c'était standalone)
+        # Dans ce cas, child = parent
+        return child_node, child_node, "sub-chunk → child (standalone)"
+
+    parent_node_id = child_node.relationships[NodeRelationship.PARENT].node_id
+    try:
+        parent_node = docstore.get_node(parent_node_id)
+        return child_node, parent_node, "sub-chunk → child → parent"
+    except Exception as e:
+        # Fallback : utiliser child comme parent
+        return child_node, child_node, f"Cannot find parent {parent_node_id}, using child: {e}"
+
+
 @router.post("/{index_id}", response_model=List[SearchResultNode])
 async def search_in_index(
         index_id: str,
         request: SearchRequest,
-        _: bool = Depends(verify_internal_api_key)  # ✅ Vérifie l'API key
+        _: bool = Depends(verify_internal_api_key)
 ):
     """
-    Performs a search in an existing index with group-based permissions.
-
-    This endpoint should ONLY be called by Open WebUI backend, which:
-    1. Verifies the user's JWT token
-    2. Fetches the user's groups from its database
-    3. Sends the verified groups in the request body
-
-    Args:
-        index_id: The library/index identifier
-        request: Contains query, user_groups (verified by Open WebUI), and optional password
-
-    Returns:
-        List of search results with scores and metadata
+    Recherche avec hiérarchie à 3 niveaux:
+    1. Retrieval sur sub-chunks (512 tokens)
+    2. Remontée vers child nodes (2000+ chars)
+    3. Remontée vers parent nodes (merged, ~10k chars)
+    4. Reranking sur PARENT nodes (changé depuis child)
+    5. Retour: precise_content (child) + context_content (parent)
     """
     logger.info(f"🔍 Search request for library: {index_id}")
-    logger.info(f"👥 User groups (verified by Open WebUI): {request.user_groups}")
+    logger.info(f"👥 User groups: {request.user_groups}")
 
-    # ✅ Vérifier les permissions basées sur les groupes
+    # Vérifications de permissions (code inchangé)
     library_groups = get_library_groups(index_id)
-
-    if library_groups:  # Si la library a des restrictions de groupes
+    if library_groups:
         user_group_set = set(request.user_groups)
         library_group_set = set(library_groups)
-
-        # Vérifier l'intersection
         if not user_group_set.intersection(library_group_set):
-            logger.warning(
-                f"❌ Access denied for groups {request.user_groups} "
-                f"to library {index_id} (requires: {library_groups})"
-            )
             raise HTTPException(
                 status_code=403,
-                detail=f"Access denied. This library requires membership in one of these groups: {library_groups}"
+                detail=f"Access denied. Requires groups: {library_groups}"
             )
-
-        logger.info(f"✅ Access granted - user has required group membership")
-    else:
-        logger.info(f"ℹ️ Library {index_id} has no group restrictions")
+        logger.info(f"✅ Access granted")
 
     index_path = get_index_path(index_id)
     index_dir = os.path.join(index_path, "index")
 
     if not os.path.exists(index_dir):
-        logger.error(f"❌ Index directory not found: {index_dir}")
-        raise HTTPException(status_code=404, detail="Index not found.")
+        raise HTTPException(status_code=404, detail="Index not found")
 
-    # ✅ Vérification du mot de passe (optionnel, pour compatibilité)
+    # Vérification mot de passe (code inchangé)
     pw_file = os.path.join(index_path, ".pw_hash")
     if os.path.exists(pw_file):
         if not request.password:
-            raise HTTPException(status_code=401, detail="Password required for this index.")
+            raise HTTPException(status_code=401, detail="Password required")
         with open(pw_file, "r") as f:
             hashed_password = f.read()
         if not verify_password(request.password, hashed_password):
-            raise HTTPException(status_code=403, detail="Incorrect password.")
+            raise HTTPException(status_code=403, detail="Incorrect password")
 
-    # ✅ Le reste de ton code de recherche reste identique
+    # Charger l'index (code similaire)
     if index_dir not in INDEX_CACHE:
-        logger.info(f"Index '{index_dir}' not in cache. Loading from FAISS...")
+        logger.info(f"Loading index from disk: {index_dir}")
         init_settings()
         faiss_index_path = os.path.join(index_dir, "default__vector_store.json")
         if not os.path.exists(faiss_index_path):
-            raise HTTPException(status_code=500, detail="FAISS index file not found. Please re-index.")
+            raise HTTPException(status_code=500, detail="FAISS index not found")
 
         try:
             faiss_index_instance = faiss.read_index(faiss_index_path)
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to load FAISS index file: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to load FAISS: {e}")
 
         vector_store = FaissVectorStore(faiss_index=faiss_index_instance)
-        storage_context = StorageContext.from_defaults(vector_store=vector_store, persist_dir=index_dir)
+        storage_context = StorageContext.from_defaults(
+            vector_store=vector_store,
+            persist_dir=index_dir
+        )
         index = load_index_from_storage(storage_context)
-
         base_retriever = index.as_retriever(similarity_top_k=50)
-        merging_retriever = AutoMergingRetriever(vector_retriever=base_retriever, storage_context=storage_context)
-        INDEX_CACHE[index_dir] = (merging_retriever, storage_context)
-        logger.info(f"FAISS index '{index_dir}' loaded and cached.")
+        INDEX_CACHE[index_dir] = (base_retriever, storage_context)
+        logger.info(f"Index cached")
     else:
-        logger.info(f"Index '{index_dir}' found in cache.")
-        merging_retriever, storage_context = INDEX_CACHE[index_dir]
+        base_retriever, storage_context = INDEX_CACHE[index_dir]
 
-    logger.info(f"Step 1: Initial retrieval for query: '{request.query}'")
-    retrieved_nodes = merging_retriever.retrieve(request.query)
-    logger.info(f"-> {len(retrieved_nodes)} nodes retrieved.")
+    # ========================================
+    # ÉTAPE 1: Retrieval initial (sub-chunks)
+    # ========================================
+    logger.info(f"📍 STEP 1: Retrieving sub-chunks for: '{request.query}'")
+    subchunk_results = base_retriever.retrieve(request.query)
+    logger.info(f"  → Retrieved {len(subchunk_results)} sub-chunks")
 
-    query_bundle = QueryBundle(query_str=request.query)
-    reranked_nodes = retrieved_nodes
+    # ========================================
+    # ÉTAPE 2: Remonter vers child et parent + DÉDUPLICATION
+    # ========================================
+    logger.info(f"📍 STEP 2: Climbing hierarchy (sub-chunk → child → parent)")
+
+    # Dictionnaire pour dédupliquer : {child_node_id: pair_info}
+    unique_child_parent_pairs = {}
+    hierarchy_stats = {"success": 0, "standalone": 0, "errors": 0, "duplicates": 0}
+
+    for subchunk_result in subchunk_results:
+        child_node, parent_node, hierarchy_info = get_child_and_parent_from_subchunk(
+            subchunk_result.node,
+            storage_context.docstore
+        )
+
+        if child_node is None:
+            logger.warning(f"  ⚠️ Failed to climb hierarchy: {hierarchy_info}")
+            hierarchy_stats["errors"] += 1
+            continue
+
+        if "standalone" in hierarchy_info:
+            hierarchy_stats["standalone"] += 1
+        else:
+            hierarchy_stats["success"] += 1
+
+        # Vérifier si on a déjà vu ce child node
+        child_id = child_node.id_
+
+        if child_id in unique_child_parent_pairs:
+            # Doublon détecté - garder le meilleur score
+            hierarchy_stats["duplicates"] += 1
+            existing_score = unique_child_parent_pairs[child_id]['subchunk_score']
+
+            if subchunk_result.score > existing_score:
+                # Ce sub-chunk a un meilleur score, on le garde
+                unique_child_parent_pairs[child_id]['subchunk_score'] = subchunk_result.score
+                unique_child_parent_pairs[child_id]['original_subchunk'] = subchunk_result.node
+        else:
+            # Nouveau child node
+            unique_child_parent_pairs[child_id] = {
+                'subchunk_score': subchunk_result.score,
+                'child_node': child_node,
+                'parent_node': parent_node,
+                'hierarchy': hierarchy_info,
+                'original_subchunk': subchunk_result.node
+            }
+
+    # Convertir le dictionnaire en liste
+    child_parent_pairs = list(unique_child_parent_pairs.values())
+
+    logger.info(f"  → Hierarchy climb results:")
+    logger.info(f"    • Success (child → parent): {hierarchy_stats['success']}")
+    logger.info(f"    • Standalone (child only): {hierarchy_stats['standalone']}")
+    logger.info(f"    • Errors: {hierarchy_stats['errors']}")
+    logger.info(f"    • Duplicates removed: {hierarchy_stats['duplicates']}")
+    logger.info(f"    • Unique child-parent pairs: {len(child_parent_pairs)}")
+
+    # ========================================
+    # ÉTAPE 3: Déduplication par parent node AVANT reranking
+    # ========================================
+    logger.info(f"📍 STEP 3: Deduplicating by parent nodes (before reranking)")
+
+    unique_parents = {}
+    parent_dedup_stats = {"duplicates": 0}
+
+    for pair in child_parent_pairs:
+        parent_id = pair['parent_node'].id_
+
+        if parent_id in unique_parents:
+            parent_dedup_stats["duplicates"] += 1
+            existing_score = unique_parents[parent_id]['subchunk_score']
+
+            if pair['subchunk_score'] > existing_score:
+                unique_parents[parent_id] = pair
+        else:
+            unique_parents[parent_id] = pair
+
+    deduplicated_pairs = list(unique_parents.values())
+
+    logger.info(f"  → Parent duplicates removed: {parent_dedup_stats['duplicates']}")
+    logger.info(f"  → Unique parent nodes: {len(deduplicated_pairs)}")
+
+    # ========================================
+    # ÉTAPE 4: Reranking sur PARENT nodes
+    # ========================================
     rerank_api_base = os.getenv("RCP_API_ENDPOINT")
     rerank_api_key = os.getenv("RCP_API_KEY")
     rerank_model = os.getenv("RERANK_MODEL", "BAAI/bge-reranker-v2-m3")
 
     if rerank_api_base and rerank_api_key:
-        logger.info(f"Step 2: Reranking with model '{rerank_model}'...")
-        documents_to_rerank = []
-        for n in retrieved_nodes:
-            file_name = n.node.metadata.get("file_name", "Unknown document")
-            header_path = n.node.metadata.get("header_path", "/")
-            breadcrumb = header_path.strip("/").replace("/", " > ") if header_path != "/" else "Root"
-            enhanced_doc = f"[Document: {file_name} | Section: {breadcrumb}]\n\n{n.node.get_content()}"
-            documents_to_rerank.append(enhanced_doc)
+        logger.info(f"📍 STEP 4: Reranking PARENT nodes with {rerank_model}")
 
+        # Construire documents depuis les PARENT nodes
+        parent_documents = []
+        for pair in deduplicated_pairs:
+            parent_node = pair['parent_node']
+            file_name = parent_node.metadata.get("file_name", "Unknown")
+            header_path = parent_node.metadata.get("header_path", "/")
+            breadcrumb = header_path.strip("/").replace("/", " > ") if header_path != "/" else "Root"
+            enhanced_doc = f"[Document: {file_name} | Section: {breadcrumb}]\n\n{parent_node.get_content()}"
+            parent_documents.append(enhanced_doc)
+
+        # Créer des NodeWithScore pour le reranker avec les PARENT nodes
+        temp_nodes_for_reranking = []
+        for pair in deduplicated_pairs:
+            temp_node = NodeWithScore(
+                node=pair['parent_node'],
+                score=pair['subchunk_score']
+            )
+            temp_nodes_for_reranking.append(temp_node)
+
+        # Appeler le reranker
         reranker = ApiReranker(
             top_n=15,
             model=rerank_model,
             api_base=rerank_api_base,
             api_key=rerank_api_key,
-            custom_documents=documents_to_rerank
+            custom_documents=parent_documents
         )
 
-        reranked_nodes = reranker.postprocess_nodes(retrieved_nodes, query_bundle=query_bundle)
-        logger.info(f"-> Reranking complete. {len(reranked_nodes)} nodes kept.")
+        query_bundle = QueryBundle(query_str=request.query)
+        reranked_parent_nodes = reranker.postprocess_nodes(
+            temp_nodes_for_reranking,
+            query_bundle=query_bundle
+        )
 
-        # ✅ Filtrer les résultats avec score < 0.15, mais garder au moins 1 résultat
-        filtered_nodes = [n for n in reranked_nodes if n.score >= 0.15]
+        logger.info(f"  → Reranking complete: {len(reranked_parent_nodes)} parents kept")
 
-        if filtered_nodes:
-            reranked_nodes = filtered_nodes
-            logger.info(f"-> After score filtering (>= 0.15): {len(reranked_nodes)} nodes kept.")
+        if not reranked_parent_nodes:
+            # Aucun résultat après reranking - fallback
+            logger.warning("  → No results after reranking, using top embedding results")
+            for pair in deduplicated_pairs[:15]:
+                pair['rerank_score'] = pair['subchunk_score']
+            final_pairs = deduplicated_pairs[:15]
         else:
-            # Garder au moins le meilleur résultat même si son score < 0.15
-            if reranked_nodes:
-                reranked_nodes = [reranked_nodes[0]]
-                logger.warning(f"-> All scores < 0.15. Keeping best result with score {reranked_nodes[0].score:.3f}")
-            else:
-                logger.warning("-> No results after reranking.")
+            # Reconstruire les pairs avec les nouveaux scores de reranking
+            final_pairs = []
+            for reranked in reranked_parent_nodes:
+                for pair in deduplicated_pairs:
+                    if pair['parent_node'].id_ == reranked.node.id_:
+                        pair['rerank_score'] = reranked.score
+                        final_pairs.append(pair)
+                        break
     else:
-        logger.warning("-> Step 2 skipped: Reranker environment variables not configured.")
+        logger.warning(f"📍 STEP 4: Skipped (no reranker configured)")
+        for pair in deduplicated_pairs:
+            pair['rerank_score'] = pair['subchunk_score']
+        final_pairs = deduplicated_pairs[:15]
 
-    main_content_map = {n.node.node_id: n.node.get_content() for n in reranked_nodes}
-
-    logger.info("Step 3: Merging context (adding neighbors)...")
-    context_merger = ContextMerger(docstore=storage_context.docstore)
-    final_nodes = context_merger.postprocess_nodes(reranked_nodes, query_bundle=query_bundle)
-
-    # src/routes/search.py
+    # ========================================
+    # ÉTAPE 5: Construire les résultats
+    # ========================================
+    logger.info(f"📍 STEP 5: Building response with {len(final_pairs)} results")
 
     results = []
-    for n in final_nodes:
-        title = n.node.metadata.get("Header 2",
-                                    n.node.metadata.get("Header 1",
-                                                        n.node.metadata.get("file_name", "Title not found")))
+    for pair in final_pairs:
+        child_node = pair['child_node']
+        parent_node = pair['parent_node']
 
-        original_id = n.node.metadata.get('original_node_id')
-        main_content = main_content_map.get(original_id, "") if original_id else "Contenu principal non trouvé"
+        precise_content = child_node.get_content()
+        context_content = parent_node.get_content()
 
-        # ✅ NOUVEAU : Trouver le fichier source original dans source_files_archive
-        file_name = n.node.metadata.get("file_name", "")
+        # Construire le titre depuis file_name et header_path
+        file_name = child_node.metadata.get("file_name", "Unknown")
+        header_path = child_node.metadata.get("header_path", "")
+
+        if header_path and header_path != "/":
+            # Prendre la dernière section du chemin
+            sections = [s.strip() for s in header_path.split("/") if s.strip()]
+            if sections:
+                title = f"{file_name} - {sections[-1]}"
+            else:
+                title = file_name
+        else:
+            title = file_name
+
+        # Trouver le fichier source
+        file_name = child_node.metadata.get("file_name", "")
         source_filename = None
 
         if file_name:
-            # Extraire le nom de base sans extension .md
             filename_base = os.path.splitext(file_name)[0]
-
-            # Chercher dans source_files_archive
             archive_dir = os.path.join(index_path, "source_files")
             pattern = os.path.join(archive_dir, f"{filename_base}.*")
             matching_files = glob.glob(pattern)
 
-            # Filtrer pour éviter les faux positifs
             exact_matches = [
                 f for f in matching_files
                 if os.path.splitext(os.path.basename(f))[0] == filename_base
             ]
 
             if exact_matches:
-                # Prendre le premier (il ne devrait y en avoir qu'un seul)
                 source_filename = os.path.basename(exact_matches[0])
-                logger.debug(f"Found source file: {file_name} -> {source_filename}")
 
-        # Utiliser source_filename si trouvé, sinon fallback sur file_name
         if source_filename:
-            file_url = f"{source_filename}"
+            file_url = source_filename
             file_type = os.path.splitext(source_filename)[1].lower().lstrip('.')
         elif file_name:
-            file_url = f"{file_name}"
+            file_url = file_name
             file_type = os.path.splitext(file_name)[1].lower().lstrip('.')
         else:
             file_url = None
             file_type = None
 
         results.append(SearchResultNode(
-            content_with_context=n.node.get_content(),
-            main_content=main_content,
-            score=n.score,
+            precise_content=precise_content,
+            context_content=context_content,
+            score=pair['rerank_score'],
             title=str(title),
-            source_url=n.node.metadata.get("source_url", "URL not found"),
-            header_path=n.node.metadata.get("header_path", "/"),
+            source_url=child_node.metadata.get("source_url", "URL not found"),
+            header_path=child_node.metadata.get("header_path", "/"),
             file_url=file_url,
-            file_type=file_type
+            file_type=file_type,
+            node_hierarchy=pair['hierarchy']
         ))
 
-    logger.info(f"✅ Search complete. Returning {len(results)} results.")
+    logger.info(f"✅ Search complete: {len(results)} results")
+    logger.info(f"   Pipeline: sub-chunks → child nodes → parent dedup → parent reranking")
+
     return results
