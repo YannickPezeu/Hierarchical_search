@@ -5,4 +5,4 @@ from passlib.context import CryptContext
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 INDEX_CACHE = {}
 ALL_INDEXES_DIR = "./all_indexes"
-DOCLING_URL = "http://10.95.33.115:30842/v1/convert/file"
+DOCLING_URL = "http://localhost:8080/v1/convert/file"

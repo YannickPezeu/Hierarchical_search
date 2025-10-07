@@ -67,6 +67,7 @@ def try_create_index_from_existing_files(client):
     """
     assert os.path.exists(SOURCE_FILES_DIR), f"Dossier source introuvable: '{SOURCE_FILES_DIR}'"
     pdf_files = [f for f in os.listdir(SOURCE_FILES_DIR) if f.endswith('.pdf')]
+    print('pdf_files', pdf_files)
     assert len(pdf_files) > 0, f"Aucun PDF trouvé dans '{SOURCE_FILES_DIR}'."
 
     files_to_upload = []
@@ -85,7 +86,7 @@ def try_create_index_from_existing_files(client):
         headers = {"X-API-Key": os.getenv("INTERNAL_API_KEY")}
 
         response = client.post(
-            f"/index/LEX_FR",
+            f"/index/test_library",
             files=files_to_upload,
             data={
                 "password": TEST_PASSWORD,

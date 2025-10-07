@@ -189,7 +189,7 @@ def index_creation_task(index_id: str, files_info: List[dict], metadata_json: st
     index_path = get_index_path(index_id)
     md_files_dir = os.path.join(index_path, "md_files")
     index_dir = os.path.join(index_path, "index")
-    source_files_archive = os.path.join(index_path, "source_files")
+    source_files_archive = os.path.join(index_path, "source_files_archive")
 
     os.makedirs(md_files_dir, exist_ok=True)
     os.makedirs(source_files_archive, exist_ok=True)
@@ -248,6 +248,12 @@ def index_creation_task(index_id: str, files_info: List[dict], metadata_json: st
                 repaired_json_string = raw_response_text
 
             response_data = json.loads(repaired_json_string)
+            print('keys in response_data:', response_data.keys())
+            print("Keys in document:", response_data["document"].keys())
+            print("\nSample of document structure:")
+            import pprint
+            pprint.pprint(response_data["document"], depth=2)
+
             md_content = response_data.get("document", {}).get("md_content", "")
 
             # Nettoyage du Markdown
