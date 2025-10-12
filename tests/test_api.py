@@ -17,6 +17,7 @@ TEST_USER_GROUPS = ["test-group-1", "test-group-2"]
 INDEXES_DIR = "./all_indexes"
 TEST_INDEX_PATH = os.path.join(INDEXES_DIR, TEST_INDEX_ID)
 SOURCE_FILES_DIR = os.path.join(TEST_INDEX_PATH, 'source_files')
+print("SOURCE_FILES_DIR", os.path.abspath(SOURCE_FILES_DIR))
 
 
 @pytest.fixture(scope="module")

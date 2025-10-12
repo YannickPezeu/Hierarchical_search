@@ -372,7 +372,7 @@ async def search_in_index(
 
         if file_name:
             filename_base = os.path.splitext(file_name)[0]
-            archive_dir = os.path.join(index_path, "source_files")
+            archive_dir = os.path.join(index_path, "source_files_archive")
             pattern = os.path.join(archive_dir, f"{filename_base}.*")
             matching_files = glob.glob(pattern)
 
@@ -394,6 +394,8 @@ async def search_in_index(
             file_url = None
             file_type = None
 
+        # Dans la fonction search_in_index, section où tu construis les résultats
+
         results.append(SearchResultNode(
             precise_content=precise_content,
             context_content=context_content,
@@ -403,10 +405,21 @@ async def search_in_index(
             header_path=child_node.metadata.get("header_path", "/"),
             file_url=file_url,
             file_type=file_type,
+            # ✨ NOUVEAU : Fragments pour text-fragment (HTML)
+            search_text_start=child_node.metadata.get("search_text_start"),
+            search_text_end=child_node.metadata.get("search_text_end"),
+            # Navigation PDF
+            node_anchor_id=child_node.metadata.get("node_anchor_id"),
+            # Pour info/debug
+            page_number=child_node.metadata.get("page_number"),
+            page_confidence=child_node.metadata.get("page_confidence"),
+            html_confidence=child_node.metadata.get("html_confidence"),
             node_hierarchy=pair['hierarchy']
         ))
 
+
     logger.info(f"✅ Search complete: {len(results)} results")
+    logger.info(f'results: {results}')
     logger.info(f"   Pipeline: sub-chunks → child nodes → parent dedup → parent reranking")
 
     return results

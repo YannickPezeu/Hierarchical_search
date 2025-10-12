@@ -44,6 +44,59 @@ async def verify_internal_api_key(x_api_key: str = Header(..., alias="X-API-Key"
     return True
 
 
+# À ajouter dans src/routes/index.py après l'endpoint create_index
+
+from src.core.models import IndexResponse, IndexingStatus
+
+
+@router.get("/{index_id}/status", response_model=IndexingStatus)
+async def get_indexing_status(
+        index_id: str,
+        _: bool = Depends(verify_internal_api_key)
+):
+    """
+    Retourne le statut de l'indexation pour une bibliothèque donnée.
+
+    Statuts possibles :
+    - "not_found": L'indexation n'a jamais été démarrée
+    - "in_progress": L'indexation est en cours
+    - "completed": L'indexation s'est terminée avec succès
+    - "failed": L'indexation a échoué
+
+    Args:
+        index_id: L'identifiant de la bibliothèque/index
+
+    Returns:
+        IndexingStatus avec les détails du statut
+    """
+    index_path = get_index_path(index_id)
+    status_file = os.path.join(index_path, ".indexing_status")
+
+    # Si le fichier de statut n'existe pas
+    if not os.path.exists(status_file):
+        return IndexingStatus(status="not_found")
+
+    # Lire et retourner le statut
+    try:
+        with open(status_file, "r") as f:
+            status_data = json.load(f)
+
+        return IndexingStatus(**status_data)
+
+    except json.JSONDecodeError:
+        logger.error(f"Corrupted status file for index {index_id}")
+        return IndexingStatus(
+            status="failed",
+            error="Status file is corrupted"
+        )
+    except Exception as e:
+        logger.error(f"Error reading status file for {index_id}: {e}")
+        return IndexingStatus(
+            status="failed",
+            error=f"Error reading status: {str(e)}"
+        )
+
+
 @router.post("/{index_id}", status_code=status.HTTP_202_ACCEPTED, response_model=IndexResponse)
 async def create_index(
         index_id: str,

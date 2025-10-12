@@ -6,6 +6,7 @@ import json
 
 import requests
 from fastapi.testclient import TestClient
+from llama_index.core.schema import TextNode
 
 from src.main import app
 
@@ -156,10 +157,149 @@ def try_search_index_success_api():
         print('-' * 40)
 
 
+LIBRARY = 'test_enrichment_html'
+
+def quicktest_enrichment():
+    # try_api.py - Test réel avec un document indexé
+
+    import os
+    import sys
+    import glob
+    import json
+    sys.path.insert(0, os.path.abspath('.'))
+
+    from src.core.indexing import index_creation_task
+
+    # Créer un index test avec TOUS les fichiers du dossier
+    index_id = LIBRARY
+    source_dir = r"all_indexes\{}\source_files".format(index_id)
+
+    # Récupérer tous les fichiers
+    all_files = glob.glob(os.path.join(source_dir, "*.*"))
+
+    # Filtrer pour ne garder que les fichiers (pas les dossiers)
+    all_files = [f for f in all_files if os.path.isfile(f)]
+
+    if not all_files:
+        print(f"❌ Aucun fichier trouvé dans {source_dir}")
+        return
+
+    print(f"📁 Fichiers trouvés dans {source_dir} : {len(all_files)}")
+    for f in all_files:
+        print(f"   • {os.path.basename(f)}")
+
+    # Simuler un upload
+    files_info = []
+    metadata = {}
+
+    for file_path in all_files:
+        filename = os.path.basename(file_path)
+        files_info.append({
+            "path": file_path,
+            "filename": filename
+        })
+        metadata[filename] = f"https://example.com/{filename}"
+
+    metadata_json = json.dumps(metadata)
+
+    print("\n🚀 Lancement de l'indexation avec enrichissement...")
+    index_creation_task(index_id, files_info, metadata_json)
+
+    print("\n✅ Indexation terminée. Vérifie les logs ci-dessus pour voir l'enrichissement.")
+
+def quicktest_search_enrichment():
+    """
+    Test de recherche après enrichissement pour vérifier que page_number est bien présent.
+    """
+    import sys
+    sys.path.insert(0, os.path.abspath('.'))
+
+    from fastapi.testclient import TestClient
+    from src.main import app
+
+    client = TestClient(app)
+    index_id = LIBRARY
+
+    print("🔍 Test de recherche avec enrichissement des pages...")
+    print("=" * 80)
+
+    # Headers avec API key
+    headers = {"X-API-Key": os.getenv("INTERNAL_API_KEY")}
+
+    # Requête de recherche
+    payload = {
+        "query": "Quels sont les taux d'overhead ?",
+        "user_groups": ["test-group-1"],  # Pas de restriction de groupe pour le test
+        "password": "supersecret"  # Pas de mot de passe pour ce test
+    }
+
+    try:
+        response = client.post(
+            f"/search/{index_id}",
+            json=payload,
+            headers=headers
+        )
+
+        print(f"📊 Statut: {response.status_code}")
+
+        if response.status_code == 200:
+            results = response.json()
+            print(f"📄 {len(results)} résultat(s) trouvé(s)\n")
+
+            # Afficher les 3 premiers résultats avec détails
+            for i, result in enumerate(results[:3], 1):
+                print(f"\n{'─' * 80}")
+                print(f"📄 Résultat #{i}")
+                print(f"{'─' * 80}")
+                print(f"  Title: {result.get('title', 'N/A')}")
+                print(f"  Score: {result.get('score', 0):.4f}")
+
+                # ✨ Vérifier l'ancre
+                anchor_id = result.get('node_anchor_id')
+                if anchor_id:
+                    print(f"  🎯 Ancre: {anchor_id}")
+                    file_url = result.get('file_url', '')
+                    if file_url:
+                        url = f"{file_url}#{anchor_id}"
+                        print(f"  🔗 URL précise: {url}")
+                else:
+                    print(f"  ⚠️ Pas d'ancre (fallback sur page)")
+                # Aperçu du contenu
+                content_preview = result.get('precise_content', '')[:200]
+                print(f"\n  💬 Aperçu du contenu:")
+                print(f"     {content_preview}...")
+
+                # Hiérarchie
+                hierarchy = result.get('node_hierarchy', 'N/A')
+                print(f"  🌳 Hiérarchie: {hierarchy}")
+
+            print(f"\n{'=' * 80}")
+            print("✅ Test terminé avec succès!")
+
+            # Vérification que tous les résultats ont bien page_number
+            results_with_page = sum(1 for r in results if r.get('page_number') is not None)
+            print(f"\n📊 Statistiques:")
+            print(f"   • Résultats avec page_number: {results_with_page}/{len(results)}")
+            print(f"   • Taux d'enrichissement: {results_with_page / len(results) * 100:.1f}%")
+
+            if results_with_page < len(results):
+                print(f"\n⚠️  Attention: {len(results) - results_with_page} résultat(s) sans page_number")
+        else:
+            print(f"❌ Erreur {response.status_code}")
+            print(f"Détails: {response.text}")
+
+    except Exception as e:
+        print(f"❌ Erreur lors du test: {e}")
+        import traceback
+        traceback.print_exc()
+
 if __name__ == '__main__':
     client = TestClient(app)
 
     # try_search_wrong_password(client)
-    try_create_index_from_existing_files(client)
+    # try_create_index_from_existing_files(client)
     # try_search_index_success(client)
     # try_search_index_success_api()
+
+    quicktest_enrichment()
+    quicktest_search_enrichment()

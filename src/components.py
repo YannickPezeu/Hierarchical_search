@@ -202,6 +202,15 @@ class ApiReranker(BaseNodePostprocessor):
             return nodes[:self.top_n]
 
 
+import logging
+# from typing import List
+# from llama_index.core.schema import TextNode, NodeRelationship, RelatedNodeInfo
+#
+logger = logging.getLogger(__name__)
+
+
+
+
 class MergeSmallNodes(TransformComponent):
     """
     Crée une hiérarchie à deux niveaux :
@@ -230,15 +239,9 @@ class MergeSmallNodes(TransformComponent):
             docs[doc_name].append(node)
         return docs
 
-    def _create_merge_groups(self, nodes_in_doc, min_size: int, max_size: int, level_name: str = ""):
+    def _create_merge_groups(self, nodes_in_doc: List[TextNode], min_size: int, max_size: int, level_name: str = ""):
         """
         Parcourt les nodes d'un document et crée des groupes de fusion.
-
-        Args:
-            nodes_in_doc: Liste des nodes à grouper
-            min_size: Taille minimum cible
-            max_size: Taille maximum
-            level_name: Nom du niveau pour les logs
         """
         merge_groups = []
         current_group = []
@@ -247,51 +250,42 @@ class MergeSmallNodes(TransformComponent):
         for node in reversed(nodes_in_doc):
             node_size = len(node.text)
 
-            # Si le node est tiny ou contient seulement des headers/images
             is_tiny = node_size < self.tiny_size and ("#" in node.text or "image" in node.text.lower())
 
-            # Si ajouter ce node dépasse max_size
             if is_tiny and current_group and (current_group_size + node_size > max_size):
-                # Finaliser le groupe actuel
                 current_group = list(reversed(current_group))
                 merge_groups.append(current_group)
                 current_group = [node]
                 current_group_size = node_size
             elif current_group and (current_group_size + node_size > max_size):
-                # Finaliser le groupe actuel
                 current_group = list(reversed(current_group))
                 merge_groups.append(current_group)
                 current_group = [node]
                 current_group_size = node_size
             else:
-                # Ajouter au groupe actuel
                 current_group.append(node)
                 current_group_size += node_size
 
-        # Finaliser le dernier groupe
         if current_group:
             current_group = list(reversed(current_group))
             merge_groups.append(current_group)
 
         return merge_groups
 
-    def _create_merged_node_from_group(self, source_nodes: List) -> TextNode:
+    def _create_merged_node_from_group(self, source_nodes: List[TextNode]) -> TextNode:
         """Crée un node fusionné à partir d'un groupe de source nodes."""
         if not source_nodes:
             return None
 
-        # Fusionner les textes
         merged_text = "\n\n".join(node.text for node in source_nodes)
 
-        # Utiliser les metadata du premier enfant
         merged_node = TextNode(
             text=merged_text,
             metadata=source_nodes[0].metadata.copy(),
         )
-
         return merged_node
 
-    def _first_pass_merge_tiny_to_child(self, original_nodes):
+    def _first_pass_merge_tiny_to_child(self, original_nodes: List[TextNode]) -> List[TextNode]:
         """
         PREMIÈRE PASSE : Fusionne les tiny nodes en child nodes de taille raisonnable.
         Retourne uniquement les child nodes (les tiny sont jetés).
@@ -302,49 +296,58 @@ class MergeSmallNodes(TransformComponent):
         print(f"Paramètres : tiny < {self.tiny_size}, target {self.child_min_size}-{self.child_max_size} chars")
 
         docs = self._group_nodes_by_document(original_nodes)
-        all_child_nodes = []
+        initial_child_nodes = []
         total_groups = 0
 
         for doc_name, doc_nodes in docs.items():
             print(f"\n--- Document: {doc_name} ({len(doc_nodes)} tiny nodes) ---")
 
-            # Créer les groupes de fusion
-            merge_groups = self._create_merge_groups(
-                doc_nodes,
-                self.child_min_size,
-                self.child_max_size,
-                "child"
-            )
+            merge_groups = self._create_merge_groups(doc_nodes, self.child_min_size, self.child_max_size, "child")
             total_groups += len(merge_groups)
-
             print(f"  • Groupes créés: {len(merge_groups)}")
 
-            # Créer un child node pour chaque groupe
             for group_idx, group in enumerate(merge_groups):
                 child_node = self._create_merged_node_from_group(group)
-                all_child_nodes.append(child_node)
-
+                initial_child_nodes.append(child_node)
                 group_size = len(child_node.text)
                 print(f"    Groupe {group_idx + 1}: {len(group)} tiny nodes -> {group_size:,} chars")
+
+        # ✨ NOUVELLE LOGIQUE DE NETTOYAGE (FORCÉE) ✨
+        final_child_nodes = []
+        for node in initial_child_nodes:
+            node_size = len(node.text)
+
+            if node_size < self.tiny_size and final_child_nodes:
+                logger.warning(f"  [Nettoyage] Détection d'un child node trop petit ({node_size} chars).")
+                logger.warning(f"  [Nettoyage] Contenu : '{node.text}'")
+
+                previous_node = final_child_nodes[-1]
+
+                # La condition de taille a été retirée pour forcer la fusion.
+                previous_node.text += "\n\n" + node.text
+                new_size = len(previous_node.text)
+                logger.warning(
+                    f"  [Nettoyage] Fusion forcée avec le node précédent (nouvelle taille: {new_size:,} chars).")
+            else:
+                final_child_nodes.append(node)
 
         print(f"\n{'=' * 80}")
         print(f"RÉSULTAT PREMIÈRE PASSE")
         print(f"{'=' * 80}")
         print(f"  • Tiny nodes originaux: {len(original_nodes)} (JETÉS)")
-        print(f"  • Child nodes créés: {len(all_child_nodes)} (CONSERVÉS)")
+        print(f"  • Child nodes créés: {len(final_child_nodes)} (CONSERVÉS)")
         print(f"  • Total groupes: {total_groups}")
 
-        # Statistiques sur les tailles
-        child_sizes = [len(c.text) for c in all_child_nodes]
+        child_sizes = [len(c.text) for c in final_child_nodes]
         if child_sizes:
             print(f"\nTAILLE DES CHILD NODES:")
             print(f"  • Min: {min(child_sizes):,} chars")
             print(f"  • Max: {max(child_sizes):,} chars")
             print(f"  • Moyenne: {sum(child_sizes) // len(child_sizes):,} chars")
 
-        return all_child_nodes
+        return final_child_nodes
 
-    def _second_pass_merge_child_to_parent(self, child_nodes):
+    def _second_pass_merge_child_to_parent(self, child_nodes: List[TextNode]) -> List[TextNode]:
         """
         SECONDE PASSE : Fusionne les child nodes en parent nodes plus grands.
         """
@@ -361,30 +364,20 @@ class MergeSmallNodes(TransformComponent):
         for doc_name, doc_nodes in docs.items():
             print(f"\n--- Document: {doc_name} ({len(doc_nodes)} child nodes) ---")
 
-            # Créer les groupes de fusion
-            merge_groups = self._create_merge_groups(
-                doc_nodes,
-                self.parent_min_size,
-                self.parent_max_size,
-                "parent"
-            )
+            merge_groups = self._create_merge_groups(doc_nodes, self.parent_min_size, self.parent_max_size, "parent")
             total_groups += len(merge_groups)
-
             print(f"  • Groupes créés: {len(merge_groups)}")
 
-            # Créer un parent pour chaque groupe
             for group_idx, group in enumerate(merge_groups):
                 parent_node = self._create_merged_node_from_group(group)
                 all_parent_nodes.append(parent_node)
 
-                # Mapper tous les children vers ce parent
                 for child in group:
                     child_to_parent_mapping[child.id_] = parent_node.id_
 
                 group_size = len(parent_node.text)
                 print(f"    Groupe {group_idx + 1}: {len(group)} child nodes -> {group_size:,} chars")
 
-        # Établir les relations child -> parent
         for child in child_nodes:
             parent_id = child_to_parent_mapping.get(child.id_)
             if parent_id:
@@ -397,7 +390,6 @@ class MergeSmallNodes(TransformComponent):
         print(f"  • Parent nodes créés: {len(all_parent_nodes)}")
         print(f"  • Total groupes: {total_groups}")
 
-        # Statistiques sur les tailles
         parent_sizes = [len(p.text) for p in all_parent_nodes]
         if parent_sizes:
             print(f"\nTAILLE DES PARENT NODES:")
@@ -407,7 +399,7 @@ class MergeSmallNodes(TransformComponent):
 
         return all_parent_nodes
 
-    def __call__(self, nodes, **kwargs):
+    def __call__(self, nodes: List[TextNode], **kwargs) -> List[TextNode]:
         if not nodes:
             return nodes
 
@@ -416,26 +408,21 @@ class MergeSmallNodes(TransformComponent):
         print("=" * 80)
         print(f"Nodes initiaux (tiny): {len(nodes)}")
 
-        # PREMIÈRE PASSE : tiny -> child (tiny nodes jetés)
         child_nodes = self._first_pass_merge_tiny_to_child(nodes)
-
-        # SECONDE PASSE : child -> parent
         parent_nodes = self._second_pass_merge_child_to_parent(child_nodes)
 
-        # RÉSUMÉ FINAL
         print(f"\n{'=' * 80}")
         print(f"HIÉRARCHIE FINALE CRÉÉE")
         print(f"{'=' * 80}")
-        print(f"  • Child nodes (1000-2000 chars): {len(child_nodes)}")
-        print(f"  • Parent nodes (2000-5000 chars): {len(parent_nodes)}")
+        print(f"  • Child nodes (taille cible {self.child_min_size}-{self.child_max_size} chars): {len(child_nodes)}")
+        print(
+            f"  • Parent nodes (taille cible {self.parent_min_size}-{self.parent_max_size} chars): {len(parent_nodes)}")
         print(f"  • TOTAL nodes retournés: {len(child_nodes) + len(parent_nodes)}")
         print(f"\nHiérarchie: child -> parent")
         print(f"Note: Les tiny nodes originaux ont été fusionnés et jetés")
         print("=" * 80 + "\n")
 
-        # Retourner SEULEMENT child + parent (pas les tiny)
         return child_nodes + parent_nodes
-
 
 
 class FilterTableOfContentsWithLLM(TransformComponent):
