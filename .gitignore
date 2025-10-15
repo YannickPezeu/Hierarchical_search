@@ -2,3 +2,5 @@
 /all_indexes/
 *.pdf
 /k8s
+pupetter_scraper/epfl_hierarchical_data
+node_modules

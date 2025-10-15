@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "fs-extra": "^11.3.2",
+    "puppeteer": "^24.24.1",
+    "robots-parser": "^3.0.1"
+  }
+}
