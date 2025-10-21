@@ -1,31 +1,28 @@
-# src/routes/index.py
+# src/routes/index.py - VERSION HIÉRARCHIQUE
 import os
 import json
 import shutil
 import logging
 from typing import List, Optional
+from pathlib import Path
 
 from fastapi import APIRouter, UploadFile, File, Form, BackgroundTasks, status, Header, Depends, HTTPException
 
-from src.core.models import IndexResponse
+from src.core.models import IndexResponse, IndexingStatus
 from src.core.utils import get_index_path, get_password_hash
 from src.core.indexing import index_creation_task
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# ✅ Récupérer l'API key depuis l'environnement
 INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY")
 
 if not INTERNAL_API_KEY:
     logger.warning("⚠️ INTERNAL_API_KEY not set! Index creation endpoint will be unsecured!")
 
 
-# ✅ Dépendance pour vérifier l'API key
 async def verify_internal_api_key(x_api_key: str = Header(..., alias="X-API-Key")):
-    """
-    Vérifie que l'appel provient bien d'Open WebUI.
-    """
+    """Vérifie que l'appel provient bien d'Open WebUI."""
     if not INTERNAL_API_KEY:
         logger.error("INTERNAL_API_KEY not configured on server")
         raise HTTPException(
@@ -44,11 +41,6 @@ async def verify_internal_api_key(x_api_key: str = Header(..., alias="X-API-Key"
     return True
 
 
-# À ajouter dans src/routes/index.py après l'endpoint create_index
-
-from src.core.models import IndexResponse, IndexingStatus
-
-
 @router.get("/{index_id}/status", response_model=IndexingStatus)
 async def get_indexing_status(
         index_id: str,
@@ -56,33 +48,17 @@ async def get_indexing_status(
 ):
     """
     Retourne le statut de l'indexation pour une bibliothèque donnée.
-
-    Statuts possibles :
-    - "not_found": L'indexation n'a jamais été démarrée
-    - "in_progress": L'indexation est en cours
-    - "completed": L'indexation s'est terminée avec succès
-    - "failed": L'indexation a échoué
-
-    Args:
-        index_id: L'identifiant de la bibliothèque/index
-
-    Returns:
-        IndexingStatus avec les détails du statut
     """
     index_path = get_index_path(index_id)
     status_file = os.path.join(index_path, ".indexing_status")
 
-    # Si le fichier de statut n'existe pas
     if not os.path.exists(status_file):
         return IndexingStatus(status="not_found")
 
-    # Lire et retourner le statut
     try:
         with open(status_file, "r") as f:
             status_data = json.load(f)
-
         return IndexingStatus(**status_data)
-
     except json.JSONDecodeError:
         logger.error(f"Corrupted status file for index {index_id}")
         return IndexingStatus(
@@ -104,23 +80,14 @@ async def create_index(
         files: List[UploadFile] = File(...),
         metadata_json: Optional[str] = Form(None),
         password: Optional[str] = Form(None),
-        groups: Optional[str] = Form(None),  # ✅ NOUVEAU : JSON string des group IDs
-        _: bool = Depends(verify_internal_api_key)  # ✅ Vérifie l'API key
+        groups: Optional[str] = Form(None),
+        _: bool = Depends(verify_internal_api_key)
 ):
     """
-    Creates or updates an index asynchronously with group-based permissions.
+    Creates or updates an index asynchronously with hierarchical structure support.
 
-    This endpoint should ONLY be called by Open WebUI backend.
-
-    Args:
-        index_id: The library/index identifier
-        files: List of files to index
-        metadata_json: Optional JSON string with file metadata (URLs, etc.)
-        password: Optional password for additional protection
-        groups: Optional JSON string with list of authorized group IDs
-
-    Returns:
-        Status and index path information
+    ⚠️ IMPORTANT : Les fichiers doivent être uploadés avec leur chemin relatif
+    préservé dans le nom du fichier (ex: "campus/services/hash/file.pdf")
     """
     logger.info(f"📥 Creating/updating index: {index_id}")
 
@@ -129,9 +96,8 @@ async def create_index(
 
     if os.path.exists(index_path):
         logger.info(f"Index '{index_id}' already exists. Cleaning old index data...")
-        # Nettoyage mais on garde .groups.json si pas de nouveaux groupes fournis
         items_to_clean = ["index", ".pw_hash"]
-        if groups:  # Si de nouveaux groupes sont fournis, on nettoie aussi l'ancien fichier
+        if groups:
             items_to_clean.append(".groups.json")
 
         for sub in items_to_clean:
@@ -146,17 +112,61 @@ async def create_index(
 
     os.makedirs(source_files_dir, exist_ok=True)
 
-    # Sauvegarder les fichiers
+    # ✅ NOUVEAU : Sauvegarder les fichiers en préservant la hiérarchie
     files_info = []
+
+    CRAWLER_ARTIFACTS = ["metadata.json", "page.html"]
+
+
     for file in files:
-        file_path = os.path.join(source_files_dir, file.filename)
+        # Le filename peut contenir le chemin relatif si uploadé depuis un scraper
+        # Exemple: "campus/services/hash/guide.pdf"
+        if file.filename.lower() in CRAWLER_ARTIFACTS:
+            logger.info(f"  ⏭️  Skipped: {file.filename} (crawler metadata)")
+            continue
+
+        original_filename = file.filename
+
+        # ✅ Extraire le nom de base et le chemin relatif
+        if "/" in original_filename or "\\" in original_filename:
+            # Normaliser les séparateurs
+            relative_path = original_filename.replace("\\", "/")
+            filename_only = os.path.basename(relative_path)
+            relative_dir = os.path.dirname(relative_path)
+        else:
+            # Fichier au premier niveau
+            relative_path = original_filename
+            filename_only = original_filename
+            relative_dir = ""
+
+        # Créer la structure de dossiers
+        target_dir = os.path.join(source_files_dir, relative_dir) if relative_dir else source_files_dir
+        os.makedirs(target_dir, exist_ok=True)
+
+        # Chemin complet de destination
+        file_path = os.path.join(target_dir, filename_only)
+
+        # Sauvegarder le fichier
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
-        files_info.append({"path": file_path, "filename": file.filename})
 
-    logger.info(f"✅ {len(files_info)} file(s) saved")
+        files_info.append({
+            "path": file_path,
+            "filename": filename_only,
+            "relative_path": relative_path  # ⬅️ CRUCIAL pour la hiérarchie
+        })
 
-    # ✅ Sauvegarder les groupes autorisés
+        logger.info(f"  ✓ Saved: {relative_path}")
+
+    if not files_info:
+        raise HTTPException(
+            status_code=400,
+            detail="No valid files to index (only crawler artifacts were provided: metadata.json, page.html)"
+        )
+
+    logger.info(f"✅ {len(files_info)} file(s) saved with hierarchical structure")
+
+    # Sauvegarder les groupes autorisés
     if groups:
         try:
             groups_data = json.loads(groups)
@@ -191,6 +201,6 @@ async def create_index(
 
     return {
         "status": "Accepted",
-        "message": "Files saved. Indexing has started.",
+        "message": "Files saved with hierarchical structure. Indexing has started.",
         "index_path": index_path
     }

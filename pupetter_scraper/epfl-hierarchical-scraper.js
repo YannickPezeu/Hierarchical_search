@@ -20,27 +20,42 @@ if (!process.env.EPFL_USERNAME_TEQUILA || !process.env.EPFL_USERNAME_MICROSOFT |
 }
 
 // Parse command line arguments for root URLs
-const getCommandLineUrls = () => {
-  const args = process.argv.slice(2); // Remove 'node' and script name
-  if (args.length > 0) {
-    console.log('Using URLs from command line arguments');
-    return args.filter(arg => arg.startsWith('http'));
+// Parse command line arguments for library name and URLs
+const getCommandLineArgs = () => {
+  const args = process.argv.slice(2);
+
+  let libraryName = null;
+  let urls = [];
+
+  // First argument should be the library name
+  if (args.length > 0 && !args[0].startsWith('http')) {
+    libraryName = args[0];
+    urls = args.slice(1).filter(arg => arg.startsWith('http'));
+  } else {
+    console.error('Error: Library name must be provided as first argument');
+    console.error('Usage: node epfl-hierarchical-scraper.js <LIBRARY_NAME> [url1] [url2] ...');
+    process.exit(1);
   }
-  return null;
+
+  return { libraryName, urls: urls.length > 0 ? urls : null };
 };
 
-const commandLineUrls = getCommandLineUrls();
+const { libraryName, urls: commandLineUrls } = getCommandLineArgs();
 
 // Configuration
 const config = {
   // Root URLs to scrape - only pages under these paths will be scraped
   // Can be overridden by command line arguments
   rootUrls: commandLineUrls || [
-    'https://www.epfl.ch/campus/services/',
-    'https://www.epfl.ch/about/'
+    'https://www.epfl.ch/campus/',
+    'https://www.epfl.ch/about/',
+      'https://www.epfl.ch/research/',
+      'https://www.epfl.ch/education/',
+      'https://www.epfl.ch/innovation/',
+      'https://www.epfl.ch/schools/',
   ],
 
-  outputDir: path.join(__dirname, 'epfl_hierarchical_data'),
+  outputDir: path.join(__dirname, '../all_indexes', libraryName, 'source_files'),
 
   credentials: {
     usernameTequila: process.env.EPFL_USERNAME_TEQUILA,
@@ -57,20 +72,21 @@ const config = {
 
     // File types to download
     downloadableFileTypes: [
-      '.pdf', '.doc', '.docx', '.ppt', '.pptx',
-      '.xls', '.xlsx', '.zip', '.rar', '.csv'
-    ],
+  '.pdf', '.doc', '.docx', '.ppt', '.pptx',
+  '.xls', '.xlsx', '.csv'
+],
 
     excludePatterns: [
-      /\.(jpg|jpeg|png|gif|svg|ico|webp|bmp)$/i,
-      /\.(mp4|avi|mov|wmv|flv|webm)$/i,
-      /\.(mp3|wav|ogg|flac)$/i,
-      /\/logout/i,
-      /\/signout/i,
-      /\/deconnexion/i,
-      /mailto:/i,
-      /tel:/i,
-    ]
+  /\.(jpg|jpeg|png|gif|svg|ico|webp|bmp)$/i,
+  /\.(mp4|avi|mov|wmv|flv|webm)$/i,
+  /\.(mp3|wav|ogg|flac)$/i,
+  /\.(zip|rar|tar|gz|7z|bz2|xz)$/i,  // ← Add this line
+  /\/logout/i,
+  /\/signout/i,
+  /\/deconnexion/i,
+  /mailto:/i,
+  /tel:/i,
+]
   },
 
   delays: {
@@ -402,6 +418,7 @@ async function authenticateEPFL(page, currentAttemptUrl) {
   }
 }
 
+
 async function downloadFile(page, url, targetDir) {
   const fileName = getSafeFileName(url);
   const filePath = path.join(targetDir, fileName);
@@ -435,6 +452,26 @@ async function downloadFile(page, url, targetDir) {
         }
 
         const fileStream = fs.createWriteStream(filePath);
+        let downloadedSize = 0;
+        const contentLength = parseInt(response.headers['content-length'] || '0');
+
+        // Timeout adaptatif basé sur la taille du fichier
+        // 30s pour les petits fichiers, jusqu'à 5 minutes pour les gros
+        const timeoutMs = contentLength > 10 * 1024 * 1024
+          ? 300000  // 5 minutes pour fichiers > 10MB
+          : contentLength > 1 * 1024 * 1024
+            ? 120000  // 2 minutes pour fichiers > 1MB
+            : 30000;  // 30 secondes pour petits fichiers
+
+        response.on('data', (chunk) => {
+          downloadedSize += chunk.length;
+          // Log progression pour gros fichiers
+          if (contentLength > 5 * 1024 * 1024 && downloadedSize % (1024 * 1024) === 0) {
+            const percent = ((downloadedSize / contentLength) * 100).toFixed(1);
+            console.log(`    ... ${percent}% (${(downloadedSize / (1024 * 1024)).toFixed(1)} MB)`);
+          }
+        });
+
         response.pipe(fileStream);
 
         fileStream.on('finish', () => {
@@ -453,9 +490,9 @@ async function downloadFile(page, url, targetDir) {
         reject(err);
       });
 
-      request.setTimeout(config.delays.download * 2, () => {
+      request.setTimeout(30000, () => {  // Timeout de connexion (30s)
         request.destroy();
-        reject(new Error('Request timeout'));
+        reject(new Error('Connection timeout'));
       });
 
       request.end();
@@ -469,9 +506,16 @@ async function downloadFile(page, url, targetDir) {
 
   } catch (error) {
     console.error(`    ✗ Failed to download ${fileName}: ${error.message}`);
+    // Nettoyer le fichier partiel
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch (e) {}
     return null;
   }
 }
+
 
 async function extractLinksFromPage(page) {
   return await page.evaluate(() => {
@@ -510,6 +554,9 @@ async function crawlPage(browser, state, urlInfo, currentDepth = 0) {
   await page.setDefaultNavigationTimeout(60000);
   await page.setDefaultTimeout(45000);
 
+  let pageFolder, htmlFileName, htmlLinks, pageTitle, status;
+  let cookiesForDownload = [];
+
   try {
     console.log(`\n[${state.visited.size + 1}] Crawling: ${url}`);
     console.log(`  Depth: ${currentDepth}, From: ${referrer || 'root'}`);
@@ -520,7 +567,7 @@ async function crawlPage(browser, state, urlInfo, currentDepth = 0) {
       throw new Error('Navigation returned no response.');
     }
 
-    const status = response.status();
+    status = response.status();
     if (status === 404) {
       console.log(`  ✗ 404 Not Found`);
       state.markFailed(url, new Error('404 Not Found'), referrer);
@@ -540,21 +587,23 @@ async function crawlPage(browser, state, urlInfo, currentDepth = 0) {
     await waitRandomTime(config.delays.navigation / 2);
 
     // Create folder for this page
-    const pageFolder = urlToFolderPath(url, config.outputDir);
+    pageFolder = urlToFolderPath(url, config.outputDir);
     fs.ensureDirSync(pageFolder);
 
-    // Save HTML
+    // Save HTML with hash in filename
     const htmlContent = await page.content();
-    const htmlPath = path.join(pageFolder, 'page.html');
+    const folderHash = path.basename(pageFolder);
+    htmlFileName = `page_${folderHash}.html`;
+    const htmlPath = path.join(pageFolder, htmlFileName);
     fs.writeFileSync(htmlPath, htmlContent);
-    console.log(`  ✓ Saved HTML`);
+    console.log(`  ✓ Saved HTML as ${htmlFileName}`);
 
     // Extract all links
     const allLinks = await extractLinksFromPage(page);
     console.log(`  Found ${allLinks.length} links`);
 
     // Separate HTML pages from downloadable documents
-    const htmlLinks = [];
+    htmlLinks = [];
     const documentLinks = [];
 
     for (const link of allLinks) {
@@ -565,37 +614,60 @@ async function crawlPage(browser, state, urlInfo, currentDepth = 0) {
       }
     }
 
-    // Download all documents linked from this page
+    pageTitle = await page.title();
+
+    // Récupérer les cookies AVANT de fermer la page
+    cookiesForDownload = await page.cookies();
+
+    // Fermer la page Puppeteer
+    await page.goto('about:blank');
+    await page.close();
+
+    console.log(`  ✓ Page closed`);
+
+    // Télécharger les documents SANS Puppeteer (juste avec HTTP)
     const downloadedFiles = [];
     if (documentLinks.length > 0) {
-      console.log(`  Downloading ${documentLinks.length} documents...`);
-      for (const docLink of documentLinks) {
-        const fileName = await downloadFile(page, docLink.href, pageFolder);
-        if (fileName) {
-          downloadedFiles.push({
-            fileName: fileName,
-            originalUrl: docLink.href,
-            linkText: docLink.text
-          });
+      console.log(`  📥 Downloading ${documentLinks.length} documents...`);
+
+      const maxDocsPerPage = 50;
+      const docsToDownload = documentLinks.slice(0, maxDocsPerPage);
+
+      if (documentLinks.length > maxDocsPerPage) {
+        console.log(`  ⚠️  Limited to ${maxDocsPerPage} documents`);
+      }
+
+      for (const docLink of docsToDownload) {
+        try {
+          const fileName = await downloadFileWithCookies(docLink.href, pageFolder, cookiesForDownload);
+          if (fileName) {
+            downloadedFiles.push({
+              fileName: fileName,
+              originalUrl: docLink.href,
+              linkText: docLink.text
+            });
+          }
+        } catch (err) {
+          console.error(`    ✗ Failed to download: ${err.message}`);
         }
       }
     }
 
-    // Create metadata file
-    const metadata = {
+    // Create metadata
+    const metadataContent = {
       url: url,
       crawledAt: new Date().toISOString(),
-      title: await page.title(),
+      title: pageTitle,
       depth: currentDepth,
       referrer: referrer,
-      htmlFile: 'page.html',
+      htmlFile: htmlFileName,
       downloadedDocuments: downloadedFiles,
       htmlLinks: htmlLinks.map(l => ({ url: l.href, text: l.text })),
       status: status
     };
 
     const metadataPath = path.join(pageFolder, 'metadata.json');
-    fs.writeJSONSync(metadataPath, metadata, { spaces: 2 });
+    fs.writeJSONSync(metadataPath, metadataContent, { spaces: 2 });
     console.log(`  ✓ Saved metadata (${downloadedFiles.length} documents downloaded)`);
 
     state.markVisited(url);
@@ -622,11 +694,80 @@ async function crawlPage(browser, state, urlInfo, currentDepth = 0) {
     state.save();
   } finally {
     try {
-      await page.goto('about:blank');
-      await page.close();
+      if (page && !page.isClosed()) {
+        await page.goto('about:blank');
+        await page.close();
+      }
     } catch (closeError) {
       console.error('Error closing page:', closeError.message);
     }
+  }
+}
+
+async function downloadFileWithCookies(url, targetDir, cookies) {
+  const fileName = getSafeFileName(url);
+  const filePath = path.join(targetDir, fileName);
+
+  console.log(`  Downloading: ${fileName}`);
+
+  try {
+    const cookieHeader = cookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ');
+    const urlObj = new URL(url);
+
+    const options = {
+      hostname: urlObj.hostname,
+      path: urlObj.pathname + urlObj.search,
+      method: 'GET',
+      headers: {
+        'User-Agent': getRandomUserAgent(),
+        'Cookie': cookieHeader,
+      },
+      rejectUnauthorized: true,
+    };
+
+    const requester = urlObj.protocol === 'https:' ? https : http;
+
+    await new Promise((resolve, reject) => {
+      const request = requester.get(options, (response) => {
+        if (response.statusCode !== 200) {
+          reject(new Error(`Status: ${response.statusCode}`));
+          response.resume();
+          return;
+        }
+
+        const fileStream = fs.createWriteStream(filePath);
+        response.pipe(fileStream);
+
+        fileStream.on('finish', () => {
+          fileStream.close(resolve);
+        });
+
+        fileStream.on('error', (err) => {
+          fs.unlink(filePath, () => {});
+          reject(err);
+        });
+      });
+
+      request.on('error', reject);
+      request.setTimeout(300000, () => {  // 5 minutes
+        request.destroy();
+        reject(new Error('Timeout'));
+      });
+      request.end();
+    });
+
+    if (fs.existsSync(filePath)) {
+      const stats = fs.statSync(filePath);
+      console.log(`    ✓ Downloaded: ${fileName} (${(stats.size / 1024).toFixed(2)} KB)`);
+      return fileName;
+    }
+
+  } catch (error) {
+    console.error(`    ✗ Failed: ${fileName} - ${error.message}`);
+    try {
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    } catch (e) {}
+    return null;
   }
 }
 
@@ -637,6 +778,8 @@ class CrawlerPool {
     this.activeCrawlers = 0;
     this.browser = null;
     this.shouldStop = false;
+    this.isProcessing = false;
+    this.finalizing = false;
   }
 
   async launchBrowser() {
@@ -659,7 +802,7 @@ class CrawlerPool {
     });
 
     this.browser.on('disconnected', () => {
-      console.warn('Browser disconnected');
+      console.warn('⚠️  Browser disconnected unexpectedly');
       this.browser = null;
     });
 
@@ -676,101 +819,168 @@ class CrawlerPool {
     return false;
   }
 
-  async run() {
-    this.shouldStop = false;
-    if (!this.browser || !(await this.browser.isConnected()) || await this.needsBrowserRestart()) {
+  logStatus() {
+    console.log(`📊 Status: ${this.activeCrawlers} active | ${this.state.visited.size} visited | ${this.state.toVisit.size} queued`);
+  }
+
+  async processOne() {
+  this.activeCrawlers++;
+
+  try {
+    // Vérifier si on doit arrêter
+    if (this.shouldStop) {
+      console.log('🛑 Stop signal received');
+      return;
+    }
+
+    // Vérifier la limite de pages
+    if (this.state.visited.size >= config.crawling.maxPages) {
+      console.log('✅ Max pages reached');
+      this.shouldStop = true;
+      return;
+    }
+
+    // Vérifier que le browser est OK
+    if (!this.browser || !this.browser.isConnected()) {
+      console.log('⚠️  Browser not available, relaunching...');
+      // Décrémenter avant de lancer pour éviter le deadlock
+      this.activeCrawlers--;
+      await this.launchBrowser();
+      this.activeCrawlers++;
+    }
+
+    // Obtenir la prochaine URL
+    const urlInfo = this.state.getNextUrl();
+
+    if (!urlInfo) {
+      console.log('ℹ️  No more URLs in queue');
+      return;
+    }
+
+    // Crawler la page
+    console.log(`\n🔍 [${this.activeCrawlers}/${this.concurrency}] Starting crawl...`);
+    await crawlPage(this.browser, this.state, urlInfo, urlInfo.metadata.depth);
+
+  } catch (error) {
+    console.error(`❌ Error in processOne: ${error.message}`);
+    console.error(error.stack);
+  } finally {
+    this.activeCrawlers--;
+    this.logStatus();
+
+    // Vérifier si le browser doit être redémarré APRÈS avoir décrémenté
+    if (this.activeCrawlers === 0 && await this.needsBrowserRestart() && !this.shouldStop) {
+      console.log('🔄 All crawlers finished, restarting browser...');
       await this.launchBrowser();
     }
 
-    const processNext = async () => {
-      if (this.shouldStop) {
-        this.activeCrawlers--;
-        if (this.activeCrawlers === 0) this.finalizeRun();
-        return;
+    // Décider si on continue
+    if (!this.shouldStop && this.state.toVisit.size > 0 && this.state.visited.size < config.crawling.maxPages) {
+      // Lancer le prochain si on est en dessous de la concurrence
+      if (this.activeCrawlers < this.concurrency) {
+        setImmediate(() => this.processOne());
       }
+    } else if (this.activeCrawlers === 0) {
+      // Plus de crawlers actifs, vérifier si on doit finir
+      console.log('\n🔍 Checking if crawl should finish...');
+      console.log(`   - shouldStop: ${this.shouldStop}`);
+      console.log(`   - toVisit.size: ${this.state.toVisit.size}`);
+      console.log(`   - visited.size: ${this.state.visited.size}`);
 
-      if (await this.needsBrowserRestart() && this.activeCrawlers === 0) {
-        await this.launchBrowser();
-      }
-
-      if (!this.browser || !this.browser.isConnected()) {
-        if (this.activeCrawlers === 0) await this.launchBrowser();
-        else {
-          await setTimeout(5000);
-          this.activeCrawlers--;
-          if (this.activeCrawlers < this.concurrency) processQueue();
-          return;
-        }
-      }
-
-      if (this.state.visited.size >= config.crawling.maxPages) {
-        this.shouldStop = true;
-        this.activeCrawlers--;
-        if (this.activeCrawlers === 0) this.finalizeRun();
-        return;
-      }
-
-      const urlInfo = this.state.getNextUrl();
-      if (urlInfo) {
-        await crawlPage(this.browser, this.state, urlInfo, urlInfo.metadata.depth)
-          .catch(e => console.error(`Error in crawlPage: ${e.message}`))
-          .finally(() => {
-            this.activeCrawlers--;
-            if (!this.shouldStop && this.activeCrawlers < this.concurrency) {
-              processQueue();
-            } else if (this.activeCrawlers === 0 && (this.shouldStop || this.state.toVisit.size === 0)) {
-              this.finalizeRun();
-            }
-          });
+      if (this.shouldStop || this.state.toVisit.size === 0 || this.state.visited.size >= config.crawling.maxPages) {
+        this.finalize();
       } else {
-        this.activeCrawlers--;
-        if (this.activeCrawlers === 0) this.finalizeRun();
+        console.log('⚠️  Queue not empty but no active crawlers! Restarting...');
+        setImmediate(() => this.startCrawlers());
       }
-    };
-
-    const processQueue = () => {
-      while (this.activeCrawlers < this.concurrency && this.state.toVisit.size > 0 && !this.shouldStop) {
-        if (this.state.visited.size >= config.crawling.maxPages) {
-          this.shouldStop = true;
-          break;
-        }
-        this.activeCrawlers++;
-        processNext();
+    }
+  }
+}
+  startCrawlers() {
+    console.log(`\n🚀 Starting ${this.concurrency} concurrent crawlers...`);
+    for (let i = 0; i < this.concurrency; i++) {
+      if (this.state.toVisit.size > 0) {
+        setImmediate(() => this.processOne());
       }
-      if (this.activeCrawlers === 0 && (this.shouldStop || this.state.toVisit.size === 0)) {
-        this.finalizeRun();
-      }
-    };
+    }
+  }
 
-    this.finalizeRun = () => {
-      if (!this.finalizing) {
-        this.finalizing = true;
-        console.log("\n=== Crawl completed ===");
-        if (this.onFinishedCallback) this.onFinishedCallback();
-      }
-    };
+  finalize() {
+    if (this.finalizing) {
+      console.log('ℹ️  Already finalizing...');
+      return;
+    }
 
-    processQueue();
+    this.finalizing = true;
+    console.log("\n" + "=".repeat(60));
+    console.log("✅ CRAWL COMPLETED");
+    console.log("=".repeat(60));
+    console.log(`📈 Total pages visited: ${this.state.visited.size}`);
+    console.log(`❌ Failed pages: ${this.state.failed.size}`);
+    console.log(`📋 Remaining in queue: ${this.state.toVisit.size}`);
+    console.log("=".repeat(60) + "\n");
 
+    if (this.onFinishedCallback) {
+      this.onFinishedCallback();
+    }
+  }
+
+  async run() {
+    this.shouldStop = false;
+    this.finalizing = false;
+
+    if (!this.browser || !this.browser.isConnected()) {
+      await this.launchBrowser();
+    }
+
+    console.log(`\n📋 Starting crawl with ${this.state.toVisit.size} URLs in queue`);
+    this.logStatus();
+
+    // Lancer les crawlers initiaux
+    this.startCrawlers();
+
+    // Retourner une promesse qui se résout quand tout est fini
     return new Promise(resolve => {
       this.onFinishedCallback = resolve;
-      if (this.activeCrawlers === 0 && (this.shouldStop || this.state.toVisit.size === 0)) {
-        this.finalizeRun();
-      }
+
+      // Vérification périodique au cas où (safety net)
+      const checkInterval = setInterval(() => {
+        if (this.activeCrawlers === 0 && !this.finalizing) {
+          console.log('\n⏰ Periodic check triggered');
+          this.logStatus();
+
+          if (this.state.toVisit.size === 0 || this.shouldStop || this.state.visited.size >= config.crawling.maxPages) {
+            clearInterval(checkInterval);
+            this.finalize();
+          } else if (this.state.toVisit.size > 0) {
+            console.log('⚠️  Restarting stalled crawlers...');
+            this.startCrawlers();
+          }
+        }
+      }, 30000); // Vérifier toutes les 30 secondes
+
+      // Nettoyer l'interval quand on finit
+      const originalCallback = this.onFinishedCallback;
+      this.onFinishedCallback = () => {
+        clearInterval(checkInterval);
+        originalCallback();
+      };
     });
   }
 
   async stop() {
-    console.log("Stopping crawler...");
+    console.log("\n🛑 Stop signal received...");
     this.shouldStop = true;
   }
 }
 
+
 async function main() {
   console.log('=================================================');
-  console.log('EPFL Hierarchical Site Scraper');
-  console.log('=================================================');
-  console.log(`Output directory: ${config.outputDir}`);
+    console.log('EPFL Hierarchical Site Scraper');
+    console.log('=================================================');
+    console.log(`Library: ${libraryName}`);
+    console.log(`Output directory: ${config.outputDir}`);
   console.log(`Root URLs:`);
   config.rootUrls.forEach(url => console.log(`  - ${url}`));
   console.log('=================================================\n');

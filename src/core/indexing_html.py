@@ -1,4 +1,4 @@
-# src/core/indexing.py
+# src/core/indexing_html.py - VERSION HIÉRARCHIQUE
 import os
 
 from src.core.utils import _normalize_text_for_comparison
@@ -7,14 +7,8 @@ import logging
 import re
 from rapidfuzz import fuzz
 from typing import List, Dict, Optional, Tuple
-# Ajouter ces fonctions dans indexing_html.py
 
-import re
-from typing import List, Dict, Optional, Tuple
-from rapidfuzz import fuzz
 logger = logging.getLogger(__name__)
-
-
 
 
 def _merge_small_anchors(anchors: List[Dict]) -> List[Dict]:
@@ -89,13 +83,6 @@ def _slugify(text: str) -> str:
     text = re.sub(r'[^\w\s-]', '', text)
     text = re.sub(r'[-\s]+', '-', text)
     return text[:50]  # Limiter la longueur
-
-
-# Ajouter ces fonctions dans indexing_html.py
-
-import re
-from typing import List, Dict, Optional, Tuple
-from rapidfuzz import fuzz
 
 
 def _is_in_collapsible(element) -> bool:
@@ -420,8 +407,8 @@ def _find_best_paragraph_for_node(
             'meets_threshold': score >= threshold,
             'type': element_type,
             'is_clean': is_clean,
-            'is_visible': is_visible,  # ✨ NOUVEAU
-            'element': element  # ✨ Garder la référence pour trouver le titre du collapsible
+            'is_visible': is_visible,
+            'element': element
         })
 
     # Trier par : 1) visible d'abord, 2) cleanness, 3) score décroissant, 4) longueur
@@ -491,11 +478,18 @@ def _find_best_paragraph_for_node(
     logger.warning(f"      ⚠️ Could not extract usable fragments")
     return None, all_candidates
 
+
 def _annotate_html_with_anchors(nodes: List, html_path: str) -> int:
     """
     Annote les child nodes avec les meilleurs fragments start/end pour text-fragment.
+
+    ⚠️ VERSION HIÉRARCHIQUE : Le html_path est déjà le chemin complet correct
+    (construit avec la hiérarchie dans indexing.py)
     """
     try:
+        # ✅ Le chemin est déjà correct grâce à la structure hiérarchique
+        logger.info(f"   🌐 Processing HTML: {os.path.basename(html_path)}")
+
         with open(html_path, 'r', encoding='utf-8') as f:
             soup = BeautifulSoup(f, 'html.parser')
 
@@ -584,7 +578,8 @@ def _annotate_html_with_anchors(nodes: List, html_path: str) -> int:
                     logger.warning(f"         Score: {candidate['score']}%")
                     logger.warning(f"         Longueur: {candidate['length']} chars")
                     logger.warning(f"         Clean: {'✅ OUI' if candidate['is_clean'] else '❌ NON'}")
-                    logger.warning(f"         Visible: {'✅ OUI' if candidate['is_visible'] else '❌ NON (dans collapse fermé)'}")
+                    logger.warning(
+                        f"         Visible: {'✅ OUI' if candidate['is_visible'] else '❌ NON (dans collapse fermé)'}")
                     logger.warning(
                         f"         Dépasse le seuil (90%): {'✅ OUI' if candidate['meets_threshold'] else '❌ NON'}")
                     logger.warning("")
@@ -726,16 +721,19 @@ def clean_html_before_docling(html_path: str) -> str:
     Crée un fichier temporaire nettoyé et retourne son chemin.
 
     Args:
-        html_path: Chemin vers le fichier HTML original
+        html_path: Chemin vers le fichier HTML original (peut contenir une hiérarchie)
 
     Returns:
         Chemin vers le fichier HTML nettoyé (temporaire)
+
+    ⚠️ VERSION HIÉRARCHIQUE : Le html_path est déjà le chemin complet correct
     """
     from bs4 import BeautifulSoup
     import tempfile
     import os
 
     logger.info(f"🧹 Nettoyage du HTML avant Docling...")
+    logger.info(f"   Source: {html_path}")
 
     # Charger le HTML
     with open(html_path, 'r', encoding='utf-8') as f:
@@ -837,7 +835,7 @@ def clean_html_before_docling(html_path: str) -> str:
             element.decompose()
             removed_count += 1
 
-    logger.info(f"   ✂️  {removed_count} éléments retirés")
+    logger.info(f"   ✂️ {removed_count} éléments retirés")
 
     # ✨ 4️⃣ NOUVEAU : Nettoyer les liens (garder le texte, retirer l'URL)
     links_cleaned = 0
@@ -917,5 +915,3 @@ def _extract_all_headers_as_anchors(soup) -> List[Dict]:
         logger.debug(f"         ✅ KEPT")
 
     return anchors
-
-

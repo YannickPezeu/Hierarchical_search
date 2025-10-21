@@ -1,4 +1,4 @@
-# src/core/indexing.py
+# src/core/indexing.py - VERSION HIÉRARCHIQUE
 import os
 import re
 import json
@@ -6,12 +6,13 @@ import logging
 import shutil
 from typing import List
 from collections import Counter
+from pathlib import Path
 import requests
 import faiss
-import pymupdf  # pip install pymupdf
+import pymupdf
 from rapidfuzz import fuzz
 from bs4 import BeautifulSoup
-# LlamaIndex Imports
+
 from llama_index.core import (
     StorageContext, VectorStoreIndex, SimpleDirectoryReader,
     QueryBundle
@@ -21,22 +22,54 @@ from llama_index.core.node_parser import MarkdownNodeParser, SentenceSplitter
 from llama_index.core.schema import NodeRelationship, RelatedNodeInfo
 from llama_index.vector_stores.faiss import FaissVectorStore
 
-# Local Project Imports
 from src.settings import init_settings
-from src.components import RepairRelationships, normalize_filename, MergeSmallNodes, \
+from src.components import (
+    RepairRelationships, normalize_filename, MergeSmallNodes,
     FilterTableOfContentsWithLLM
+)
 from src.core.config import DOCLING_URL
 from src.core.utils import get_index_path
-import pymupdf  # pip install pymupdf
-from rapidfuzz import fuzz
-from bs4 import BeautifulSoup
-
 from src.core.indexing_html import _annotate_html_with_anchors, clean_html_before_docling
+import time
+
 
 logger = logging.getLogger(__name__)
 
 
-# --- Markdown Processing Helpers ---
+# ============================================================================
+# HELPER FUNCTIONS POUR CHEMINS HIÉRARCHIQUES
+# ============================================================================
+
+def extract_relative_path(full_path: str, base_dir: str) -> str:
+    """
+    Extrait le chemin relatif depuis un dossier de base.
+
+    Args:
+        full_path: /path/to/source_files/campus/services/hash/file.pdf
+        base_dir: /path/to/source_files
+
+    Returns:
+        campus/services/hash/file.pdf
+    """
+    return os.path.relpath(full_path, base_dir)
+
+
+def get_parent_dir_path(relative_path: str) -> str:
+    """
+    Retourne le chemin du dossier parent depuis un chemin relatif.
+
+    Args:
+        relative_path: campus/services/hash/file.pdf
+
+    Returns:
+        campus/services/hash
+    """
+    return os.path.dirname(relative_path)
+
+
+# ============================================================================
+# MARKDOWN PROCESSING (inchangé)
+# ============================================================================
 
 def should_reconstruct_hierarchy(markdown_text: str) -> bool:
     header_levels = set()
@@ -95,7 +128,9 @@ def remove_duplicate_headers(markdown_text: str) -> str:
     return "\n".join(cleaned_lines)
 
 
-# src/core/indexing.py
+# ============================================================================
+# ANNOTATION (logique inchangée, mais chemins adaptés)
+# ============================================================================
 
 def annotate_documents_with_node_anchors(
         nodes: List,
@@ -106,11 +141,10 @@ def annotate_documents_with_node_anchors(
     Modifie les documents sources (PDF/HTML) pour insérer des ancres/destinations
     pointant vers chaque child node.
 
-    Pour PDF : Ajoute des destinations nommées
-    Pour HTML : Ajoute des IDs aux headers et crée un fichier *_indexed.html
+    ⚠️ VERSION HIÉRARCHIQUE : Gère les chemins relatifs dans l'arborescence
     """
     logger.info(f"\n{'=' * 80}")
-    logger.info(f"ANNOTATION DES DOCUMENTS AVEC ANCRES DE NODES")
+    logger.info(f"ANNOTATION DES DOCUMENTS AVEC ANCRES DE NODES (HIÉRARCHIQUE)")
     logger.info(f"{'=' * 80}")
 
     nodes_by_document = {}
@@ -127,8 +161,10 @@ def annotate_documents_with_node_anchors(
     total_failed = 0
 
     for md_filename, doc_nodes in nodes_by_document.items():
-        meta_file = os.path.join(md_files_dir, f"{md_filename}.meta")
-        if not os.path.exists(meta_file):
+        # ✅ NOUVEAU : Chercher le .meta dans l'arborescence
+        meta_file = find_meta_file_in_tree(md_files_dir, md_filename)
+
+        if not meta_file:
             logger.warning(f"⚠️ Métadonnées introuvables pour {md_filename}")
             total_failed += len(doc_nodes)
             continue
@@ -137,12 +173,20 @@ def annotate_documents_with_node_anchors(
             metadata = json.load(f)
 
         source_filename = metadata.get("source_filename", "")
+        source_relative_path = metadata.get("source_relative_path", "")
+
         if not source_filename:
             logger.warning(f"⚠️ Nom de fichier source manquant pour {md_filename}")
             total_failed += len(doc_nodes)
             continue
 
-        source_path = os.path.join(source_files_archive, source_filename)
+        # ✅ NOUVEAU : Construire le chemin complet avec la hiérarchie
+        if source_relative_path:
+            source_path = os.path.join(source_files_archive, source_relative_path)
+        else:
+            # Fallback pour anciens fichiers sans source_relative_path
+            source_path = os.path.join(source_files_archive, source_filename)
+
         if not os.path.exists(source_path):
             logger.warning(f"⚠️ Fichier source introuvable : {source_path}")
             total_failed += len(doc_nodes)
@@ -152,9 +196,9 @@ def annotate_documents_with_node_anchors(
         child_nodes = [n for n in doc_nodes if NodeRelationship.PARENT in n.relationships]
         parent_nodes = [n for n in doc_nodes if NodeRelationship.PARENT not in n.relationships]
 
-        logger.info(f"\n📄 Traitement de {source_filename}")
+        logger.info(f"\n📄 Traitement de {source_relative_path or source_filename}")
         logger.info(f"   • {len(child_nodes)} child nodes à annoter")
-        logger.info(f"   • {len(parent_nodes)} parent nodes (seront ignorés, recevront un ID d'ancre de fallback)")
+        logger.info(f"   • {len(parent_nodes)} parent nodes (recevront un ID de fallback)")
 
         # Parent nodes : ID de fallback
         for parent in parent_nodes:
@@ -168,13 +212,11 @@ def annotate_documents_with_node_anchors(
 
         if nodes_to_annotate:
             if ext_lower == '.pdf':
-                # Annotation PDF (existant)
                 annotated = _annotate_pdf_with_destinations(nodes_to_annotate, source_path)
                 total_annotated += annotated
                 total_failed += (len(nodes_to_annotate) - annotated)
 
             elif ext_lower in ['.html', '.htm']:
-                # ✨ Annotation HTML (nouvelle version avec modification du fichier)
                 annotated = _annotate_html_with_anchors(nodes_to_annotate, source_path)
                 total_annotated += annotated
                 total_failed += (len(nodes_to_annotate) - annotated)
@@ -189,11 +231,430 @@ def annotate_documents_with_node_anchors(
     logger.info(f"RÉSULTAT DE L'ANNOTATION")
     logger.info(f"{'=' * 80}")
     logger.info(f"  ✅ Child nodes annotés : {total_annotated}")
-    logger.info(f"  ⏭️  Parent nodes (ignorés) : {total_skipped_parents}")
+    logger.info(f"  ⭐ Parent nodes (ignorés) : {total_skipped_parents}")
     logger.info(f"  ❌ Échecs : {total_failed}")
     logger.info(f"{'=' * 80}\n")
 
     return nodes
+
+
+def find_meta_file_in_tree(base_dir: str, md_filename: str) -> str:
+    """
+    Cherche un fichier .meta dans toute l'arborescence.
+
+    Args:
+        base_dir: Racine de l'arborescence (md_files/)
+        md_filename: Nom du fichier .md (ex: "guide.md")
+
+    Returns:
+        Chemin complet vers le .meta ou None
+    """
+    meta_filename = f"{md_filename}.meta"
+
+    for root, dirs, files in os.walk(base_dir):
+        if meta_filename in files:
+            return os.path.join(root, meta_filename)
+
+    return None
+
+
+def clean_markdown_whitespace(markdown_text: str) -> str:
+    """
+    Nettoie les espaces inutiles et les images base64 dans le markdown pour réduire les tokens.
+
+    - Supprime complètement les images encodées en base64
+    - Réduit les séquences d'espaces multiples dans les tableaux
+    - Raccourcit les lignes de séparateurs (---, ___, etc.)
+    - Conserve la structure du markdown pour qu'il s'affiche correctement
+    """
+    original_length = len(markdown_text)
+
+    # ✨ ÉTAPE 1 : Supprimer complètement les images base64
+    # Pattern pour détecter et supprimer ![texte](data:image/...)
+    markdown_text = re.sub(
+        r'!\[([^\]]*)\]\(data:image/[^;]+;base64,[A-Za-z0-9+/=]+\)',
+        '',  # Suppression complète
+        markdown_text
+    )
+
+    # Pattern alternatif pour images sans texte alt
+    markdown_text = re.sub(
+        r'!\[\]\(data:image/[^;]+;base64,[A-Za-z0-9+/=]+\)',
+        '',  # Suppression complète
+        markdown_text
+    )
+
+    # ÉTAPE 2 : Nettoyer les lignes
+    lines = markdown_text.splitlines()
+    cleaned_lines = []
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Détecter les lignes de séparateurs de tableaux markdown
+        if '|' in line and re.match(r'^[\s\|\-_=:]+$', stripped):
+            num_pipes = stripped.count('|')
+            if num_pipes >= 2:
+                separator = '| ' + ' | '.join(['---'] * (num_pipes - 1)) + ' |'
+                cleaned_lines.append(separator)
+            else:
+                cleaned_lines.append(stripped)
+
+        # Lignes de tableaux normales (avec du contenu)
+        elif '|' in line:
+            cleaned_line = re.sub(r'\s*\|\s*', ' | ', line)
+            cleaned_line = re.sub(r'\s{2,}', ' ', cleaned_line)
+            cleaned_lines.append(cleaned_line.strip())
+
+        # Autres lignes de séparateurs (headers, etc.)
+        elif re.match(r'^[\s\-_=.]+$', stripped):
+            if '-' in line:
+                cleaned_lines.append('---')
+            elif '_' in line:
+                cleaned_lines.append('___')
+            elif '=' in line:
+                cleaned_lines.append('===')
+            elif '.' in line:
+                cleaned_lines.append('...')
+            else:
+                cleaned_lines.append(stripped)
+
+        else:
+            # Pour les lignes normales, réduire simplement les espaces multiples
+            cleaned_line = re.sub(r'\s{3,}', '  ', line)
+            cleaned_lines.append(cleaned_line)
+
+    # Réduire les lignes vides consécutives à maximum 2
+    result = '\n'.join(cleaned_lines)
+    result = re.sub(r'\n{4,}', '\n\n\n', result)
+
+    cleaned_length = len(result)
+    reduction_percent = ((original_length - cleaned_length) / original_length * 100) if original_length > 0 else 0
+
+    logger.info(
+        f"  📊 Markdown cleaned: {original_length:,} → {cleaned_length:,} chars ({reduction_percent:.1f}% reduction)")
+
+    return result
+
+# Modified section of index_creation_task function
+# Replace the duplicate checking section (around lines 395-410) with:
+
+def make_windows_long_path(path):
+    """
+    Convertit un chemin en chemin long Windows (préfixé \\?\) si nécessaire.
+    """
+    if os.name == 'nt' and not path.startswith('\\\\?\\'):
+        # Convertir en chemin absolu d'abord
+        abs_path = os.path.abspath(path)
+        return '\\\\?\\' + abs_path
+    return path
+
+
+def index_creation_task(index_id: str, files_info: List[dict], metadata_json: str):
+    """
+    Tâche d'indexation complète avec support hiérarchique.
+    """
+    index_path = get_index_path(index_id)
+    md_files_dir = os.path.join(index_path, "md_files")
+    index_dir = os.path.join(index_path, "index")
+    source_files_archive = os.path.join(index_path, "source_files_archive")
+    source_files_temp = os.path.join(index_path, "source_files")
+
+    # Créer un fichier de statut "en cours"
+    status_file = os.path.join(index_path, ".indexing_status")
+    start_time = time.time()
+    with open(status_file, "w") as f:
+        json.dump({"status": "in_progress", "started_at": start_time}, f)
+
+    os.makedirs(md_files_dir, exist_ok=True)
+    os.makedirs(source_files_archive, exist_ok=True)
+
+    try:
+        # ✅ NOUVEAU : Construire un dictionnaire des vraies URLs depuis metadata_json
+        true_urls_map = {}  # {filename: true_url}
+
+        if metadata_json:
+            try:
+                metadata = json.loads(metadata_json)
+                true_urls_map = metadata  # Format: {"file.pdf": "https://real-url.com/file.pdf"}
+                logger.info(f"📋 Loaded {len(true_urls_map)} URL mappings from metadata")
+            except json.JSONDecodeError:
+                logger.warning("⚠️ Failed to parse metadata_json, will use fallback URLs")
+                metadata = {}
+        else:
+            metadata = {}
+
+        seen_basenames = set()
+        skipped_duplicates = []  # Track skipped duplicate files
+
+        files_info = [
+            f for f in files_info
+            if f["filename"].lower() not in ["metadata.json"]
+        ]
+
+        if not files_info:
+            raise ValueError("No valid files to index after filtering crawler artifacts (metadata.json)")
+
+        logger.info(f"📄 Files to index after filtering: {len(files_info)}")
+
+        # ========================================
+        # PHASE 1 : CONVERSION DES FICHIERS
+        # ========================================
+        for file_info in files_info:
+            file_path = file_info["path"]
+            original_filename = file_info["filename"]
+
+            # ✅ Extraire le chemin relatif
+            relative_path = file_info.get("relative_path")
+
+            if not relative_path:
+                relative_path = extract_relative_path(file_path, source_files_temp)
+
+            # Normaliser le nom de fichier
+            normalized_basename, ext = os.path.splitext(normalize_filename(original_filename))
+
+            relative_dir = os.path.dirname(relative_path)
+            md_dir_for_file = os.path.join(md_files_dir, relative_dir)
+
+            md_filename = f"{normalized_basename}.md"
+            md_filepath = os.path.join(md_dir_for_file, md_filename)
+            # --- FIN : Calcul des chemins cibles ---
+
+            # ✅ OPTIMISATION : Check AVANT toute opération I/O
+            if os.path.exists(md_filepath):
+                logger.info(f"Markdown exists, skipping: {os.path.join(relative_dir, md_filename)}")
+                continue
+
+            # Vérifier doublons - MODIFIED SECTION
+            if normalized_basename in seen_basenames:
+                if normalized_basename == 'metadata':
+                    # Allow metadata duplicates
+                    pass
+                else:
+                    # Log warning and skip duplicate file instead of raising error
+                    logger.warning(f"⚠️ Duplicate filename detected: {normalized_basename}")
+                    logger.warning(f"   Skipping file: {original_filename} at {relative_path}")
+                    skipped_duplicates.append({
+                        "filename": original_filename,
+                        "normalized": normalized_basename,
+                        "path": relative_path
+                    })
+                    continue  # Skip to next file
+
+            seen_basenames.add(normalized_basename)
+
+            # ✅ Reproduire la hiérarchie dans source_files_archive
+            archive_dir_for_file = os.path.join(source_files_archive, relative_dir)
+            os.makedirs(archive_dir_for_file, exist_ok=True)
+
+            archived_filename = f"{normalized_basename}{ext}"
+            archive_destination = make_windows_long_path(
+                os.path.join(archive_dir_for_file, archived_filename)
+            )
+            archived_relative_path = os.path.join(relative_dir,
+                                                  archived_filename) if relative_dir else archived_filename
+
+            # Copier vers source_files_archive
+            if file_path != archive_destination:
+                shutil.copy2(file_path, archive_destination)
+                logger.info(f"File archived: {archived_relative_path}")
+
+            # ✅ Reproduire la hiérarchie dans md_files
+            os.makedirs(md_dir_for_file, exist_ok=True)
+
+            md_filename = f"{normalized_basename}.md"
+            md_filepath = os.path.join(md_dir_for_file, md_filename)
+            meta_filepath = md_filepath + ".meta"
+
+            # ✅ CORRECTION : Extraire la vraie URL depuis true_urls_map
+            # Pour les fichiers HTML, chercher l'entrée qui se termine par /page_xxx.html
+            # Pour les autres fichiers, chercher par nom de fichier exact
+
+            true_source_url = None
+
+            if ext.lower() in ['.html', '.htm']:
+                # Pour HTML : chercher dans metadata.json l'URL du dossier parent
+                # Le scraper sauvegarde metadata.json avec "url" de la page
+                parent_metadata_path = os.path.join(os.path.dirname(file_path), 'metadata.json')
+
+                if os.path.exists(parent_metadata_path):
+                    try:
+                        with open(parent_metadata_path, 'r', encoding='utf-8') as f:
+                            scraper_metadata = json.load(f)
+                            true_source_url = scraper_metadata.get('url')
+                            logger.info(f"  ✔ Found true URL from scraper metadata.json: {true_source_url}")
+                    except Exception as e:
+                        logger.warning(f"  ⚠️ Failed to read scraper metadata.json: {e}")
+            else:
+                # Pour les autres fichiers (PDF, DOCX, etc.) : chercher dans true_urls_map
+                # Le scraper sauvegarde dans downloadedDocuments avec originalUrl
+                parent_metadata_path = os.path.join(os.path.dirname(file_path), 'metadata.json')
+
+                if os.path.exists(parent_metadata_path):
+                    try:
+                        with open(parent_metadata_path, 'r', encoding='utf-8') as f:
+                            scraper_metadata = json.load(f)
+                            downloaded_docs = scraper_metadata.get('downloadedDocuments', [])
+
+                            # Chercher le document qui correspond à notre fichier
+                            for doc in downloaded_docs:
+                                if doc.get('fileName') == original_filename:
+                                    true_source_url = doc.get('originalUrl')
+                                    logger.info(f"  ✔ Found true URL from downloadedDocuments: {true_source_url}")
+                                    break
+                    except Exception as e:
+                        logger.warning(f"  ⚠️ Failed to read scraper metadata.json: {e}")
+
+            # Fallback si aucune URL trouvée
+            if not true_source_url:
+                true_source_url = true_urls_map.get(original_filename, f"URL not found for {original_filename}")
+                logger.warning(f"  ⚠️ Using fallback URL: {true_source_url}")
+
+            # Créer le fichier .meta avec la VRAIE URL
+            if not os.path.exists(meta_filepath):
+                with open(meta_filepath, "w", encoding="utf-8") as f:
+                    json.dump({
+                        "source_url": true_source_url,  # ← VRAIE URL
+                        "source_filename": archived_filename,
+                        "source_relative_path": archived_relative_path
+                    }, f, indent=2)
+                logger.info(f"Metadata file created: {os.path.join(relative_dir, md_filename + '.meta')}")
+                logger.info(f"  URL: {true_source_url}")
+
+
+
+            # Nettoyage HTML si nécessaire
+            if ext.lower() in ['.html', '.htm']:
+                logger.info(f"🌐 HTML detected: {original_filename}")
+                try:
+                    cleaned_html_path = clean_html_before_docling(archive_destination)
+                    file_to_convert = cleaned_html_path
+                    cleanup_temp = True
+                except Exception as e:
+                    logger.warning(f"⚠️ HTML cleaning failed: {e}")
+                    file_to_convert = archive_destination
+                    cleanup_temp = False
+            else:
+                file_to_convert = archive_destination
+                cleanup_temp = False
+
+            # Conversion via Docling
+            logger.info(f"Converting file via Docling: {original_filename}")
+            try:
+                with open(file_to_convert, "rb") as f:
+                    response = requests.post(
+                        DOCLING_URL,
+                        files={'files': (original_filename, f)},
+                        data={"table_mode": "accurate"},
+                    )
+                    response.raise_for_status()
+            except requests.exceptions.RequestException as req_err:
+                logger.error(f"Docling error for '{original_filename}': {req_err}")
+                if cleanup_temp and os.path.exists(file_to_convert):
+                    os.remove(file_to_convert)
+                continue
+            finally:
+                if cleanup_temp and os.path.exists(file_to_convert):
+                    os.remove(file_to_convert)
+
+            # Traitement de la réponse Docling
+            raw_response_text = response.text
+            try:
+                repaired_json_string = raw_response_text.encode('latin-1').decode('utf-8')
+            except (UnicodeEncodeError, UnicodeDecodeError):
+                repaired_json_string = raw_response_text
+
+            response_data = json.loads(repaired_json_string)
+            md_content = response_data.get("document", {}).get("md_content", "")
+
+            # Nettoyage du Markdown
+            md_content_final = reconstruct_markdown_hierarchy(md_content) if should_reconstruct_hierarchy(
+                md_content) else md_content
+            cleaned_md = remove_duplicate_headers(md_content_final)
+
+            # Nettoyer les espaces inutiles pour réduire les tokens
+            cleaned_md = clean_markdown_whitespace(cleaned_md)
+
+            # Sauvegarder le Markdown
+            with open(md_filepath, "w", encoding="utf-8") as f:
+                f.write(cleaned_md)
+            logger.info(f"✔ Markdown saved: {os.path.join(relative_dir, md_filename)}")
+
+        # Log summary of skipped duplicates
+        if skipped_duplicates:
+            logger.warning(f"\n{'=' * 80}")
+            logger.warning(f"⚠️ DUPLICATE FILES SKIPPED: {len(skipped_duplicates)}")
+            logger.warning(f"{'=' * 80}")
+            for dup in skipped_duplicates:
+                logger.warning(f"  • {dup['filename']} → {dup['normalized']} at {dup['path']}")
+            logger.warning(f"{'=' * 80}\n")
+
+        # ========================================
+        # PHASE 2 : INDEXATION LLAMAINDEX (inchangée)
+        # ========================================
+        logger.info(f"Starting LlamaIndex indexing for directory: {md_files_dir}")
+        run_indexing_logic(source_md_dir=md_files_dir, index_dir=index_dir)
+
+        # Marquer comme terminé avec succès
+        end_time = time.time()
+        actual_files_processed = len(files_info) - len(skipped_duplicates)
+
+        with open(status_file, "w") as f:
+            json.dump({
+                "status": "completed",
+                "started_at": start_time,
+                "completed_at": end_time,
+                "duration_seconds": end_time - start_time,
+                "num_documents": actual_files_processed,
+                "skipped_duplicates": len(skipped_duplicates),
+                "skipped_files": [d["filename"] for d in skipped_duplicates]
+            }, f)
+
+        logger.info(f"✅ Indexation terminée avec succès pour {index_id} en {end_time - start_time:.1f}s")
+        logger.info(f"   • Files processed: {actual_files_processed}")
+        logger.info(f"   • Duplicates skipped: {len(skipped_duplicates)}")
+
+    except Exception as e:
+        end_time = time.time()
+        with open(status_file, "w") as f:
+            json.dump({
+                "status": "failed",
+                "error": str(e),
+                "error_type": type(e).__name__,
+                "started_at": start_time,
+                "failed_at": end_time,
+                "duration_seconds": end_time - start_time
+            }, f)
+
+        logger.error(f"❌ Error during indexing task for '{index_path}': {e}", exc_info=True)
+        if os.path.exists(index_dir):
+            shutil.rmtree(index_dir)
+        raise
+
+
+def load_metadata_from_meta_file_direct(meta_filepath: str) -> dict:
+    """
+    Charge les métadonnées depuis un fichier .meta (version avec chemin direct).
+    """
+    if not os.path.exists(meta_filepath):
+        return {}
+
+    try:
+        with open(meta_filepath, 'r', encoding='utf-8') as f:
+            metadata = json.load(f)
+        return metadata
+    except Exception as e:
+        logger.warning(f"Failed to load .meta file {meta_filepath}: {e}")
+        return {}
+
+
+def load_metadata_from_meta_file(md_filepath: str) -> dict:
+    """
+    Charge les métadonnées depuis le fichier .meta correspondant au markdown.
+    (Wrapper pour compatibilité)
+    """
+    meta_filepath = md_filepath + ".meta"
+    return load_metadata_from_meta_file_direct(meta_filepath)
 
 
 def _normalize_text_for_comparison(text: str) -> str:
@@ -543,6 +1004,9 @@ def _annotate_pdf_with_destinations(nodes: List, pdf_path: str) -> int:
         logger.error(f"   ❌ Error: {e}", exc_info=True)
         return 0
 
+# ============================================================================
+# INDEXATION PRINCIPALE
+# ============================================================================
 
 def run_indexing_logic(source_md_dir: str, index_dir: str):
     logger.info(f"Starting LlamaIndex indexing for directory: {source_md_dir}")
@@ -552,7 +1016,7 @@ def run_indexing_logic(source_md_dir: str, index_dir: str):
     # ÉTAPE 1 : PARSING (création des tiny nodes)
     # ========================================
     logger.info("\n" + "=" * 80)
-    logger.info("ÉTAPE 1 : PARSING DU MARKDOWN")
+    logger.info("ÉTAPE 1 : PARSING DU MARKDOWN (HIÉRARCHIQUE)")
     logger.info("=" * 80)
 
     parser_only_pipeline = IngestionPipeline(
@@ -560,30 +1024,53 @@ def run_indexing_logic(source_md_dir: str, index_dir: str):
             MarkdownNodeParser(include_metadata=True, include_prev_next_rel=True),
         ]
     )
-    reader = SimpleDirectoryReader(source_md_dir)
+
+    # ✅ NOUVEAU : Lecture récursive avec required_exts
+    reader = SimpleDirectoryReader(
+        input_dir=source_md_dir,
+        required_exts=[".md"],
+        recursive=True,  # ⬅️ CRUCIAL pour la hiérarchie
+        exclude=["*.meta", "*metadata.json", ]  # ← Ajout de page.html
+    )
+
     all_docs = reader.load_data()
     documents = [
         doc for doc in all_docs
         if not doc.metadata.get("file_name", "").endswith(".meta")
+           and doc.metadata.get("file_name", "").lower() not in ["metadata.json"]
+
     ]
-    logger.info(f"📝 Enriching documents with .meta information...")
+
+    logger.info(f"📁 Enriching documents with .meta information (hierarchical)...")
+
     for doc in documents:
         md_filename = doc.metadata.get("file_name", "")
 
         if md_filename:
-            md_filepath = os.path.join(source_md_dir, md_filename)
-            meta_info = load_metadata_from_meta_file(md_filepath)
+            # ✅ NOUVEAU : Chercher le .meta dans l'arborescence
+            md_filepath = doc.metadata.get("file_path", "")
 
-            if "source_url" in meta_info:
-                doc.metadata["source_url"] = meta_info["source_url"]
-                logger.debug(f"  ✓ source_url: {meta_info['source_url']}")
+            if md_filepath:
+                meta_filepath = md_filepath + ".meta"
+            else:
+                # Fallback : chercher dans toute l'arborescence
+                meta_filepath = find_meta_file_in_tree(source_md_dir, md_filename)
 
-            if "source_filename" in meta_info:
-                doc.metadata["source_filename"] = meta_info["source_filename"]
+            if meta_filepath and os.path.exists(meta_filepath):
+                meta_info = load_metadata_from_meta_file_direct(meta_filepath)
+
+                if "source_url" in meta_info:
+                    doc.metadata["source_url"] = meta_info["source_url"]
+                    logger.debug(f"  ✓ source_url: {meta_info['source_url']}")
+
+                if "source_filename" in meta_info:
+                    doc.metadata["source_filename"] = meta_info["source_filename"]
+
+                if "source_relative_path" in meta_info:
+                    doc.metadata["source_relative_path"] = meta_info["source_relative_path"]
 
     logger.info(f"📄 {len(documents)} documents loaded and enriched")
 
-    logger.info(f"📄 {len(documents)} documents markdown chargés (fichiers .meta exclus)")
     tiny_nodes = parser_only_pipeline.run(documents=documents)
     logger.info(f"📦 {len(tiny_nodes)} tiny nodes créés")
 
@@ -612,26 +1099,20 @@ def run_indexing_logic(source_md_dir: str, index_dir: str):
     # ========================================
     # ÉTAPE 3 : ANNOTATION POST-FUSION
     # ========================================
-    # ▼▼▼ BLOC DÉPLACÉ ET MODIFIÉ ▼▼▼
     logger.info("\n" + "=" * 80)
-    logger.info("ÉTAPE 3 : ANNOTATION DES DOCUMENTS (POST-FUSION)")
+    logger.info("ÉTAPE 3 : ANNOTATION DES DOCUMENTS (POST-FUSION, HIÉRARCHIQUE)")
     logger.info("=" * 80)
-    logger.info("Annotation basée sur les child nodes pour une meilleure précision.")
 
     source_files_archive = os.path.join(os.path.dirname(source_md_dir), "source_files_archive")
 
-
-    # On passe tous les noeuds (child+parent) à la fonction d'annotation.
-    # Elle saura les différencier et n'annotera que les child nodes.
     annotate_documents_with_node_anchors(
         all_nodes,
         source_files_archive,
         source_md_dir
     )
-    # ▲▲▲ FIN DU BLOC MODIFIÉ ▲▲▲
 
     # ========================================
-    # ÉTAPE 4 : SÉPARATION CHILD/PARENT NODES
+    # ÉTAPE 4-6 : Reste inchangé
     # ========================================
     logger.info("\n" + "=" * 80)
     logger.info("ÉTAPE 4 : SÉPARATION CHILD/PARENT NODES")
@@ -649,9 +1130,7 @@ def run_indexing_logic(source_md_dir: str, index_dir: str):
     logger.info(f"  • Child nodes (1000-2000 chars): {len(child_nodes)}")
     logger.info(f"  • Parent nodes (2000-5000 chars): {len(parent_nodes)}")
 
-    # ========================================
-    # ÉTAPE 5 : CRÉATION DES SUB-CHUNKS
-    # ========================================
+    # ÉTAPE 5 : SUB-CHUNKS
     logger.info("\n" + "=" * 80)
     logger.info("ÉTAPE 5 : CRÉATION DES SUB-CHUNKS")
     logger.info("=" * 80)
@@ -666,7 +1145,7 @@ def run_indexing_logic(source_md_dir: str, index_dir: str):
                 k: v for k, v in child_node.metadata.items()
                 if k.startswith("Header") or k in [
                     "header_path", "file_name", "source_url",
-                    "node_anchor_id",
+                    "node_anchor_id", "source_relative_path",
                     "page_number", "page_confidence",
                     "html_confidence"
                 ]
@@ -675,9 +1154,7 @@ def run_indexing_logic(source_md_dir: str, index_dir: str):
 
     logger.info(f"  • Sub-chunks créés: {len(sub_chunks)}")
 
-    # ========================================
     # ÉTAPE 6 : INDEXATION
-    # ========================================
     logger.info("\n" + "=" * 80)
     logger.info("ÉTAPE 6 : INDEXATION FAISS")
     logger.info("=" * 80)
@@ -699,240 +1176,11 @@ def run_indexing_logic(source_md_dir: str, index_dir: str):
     index = VectorStoreIndex(nodes=sub_chunks, storage_context=storage_context)
     index.storage_context.persist(persist_dir=index_dir)
 
-    # ========================================
-    # RÉSUMÉ FINAL
-    # ========================================
     logger.info(f"\n{'=' * 80}")
-    logger.info(f"✅ INDEXATION COMPLÈTE")
-    logger.info(f"{'=' * 80}")
-    logger.info(f"  • Vector index: {len(sub_chunks)} sub-chunks indexés")
-    logger.info(f"  • Docstore: {len(all_nodes_for_docstore)} nodes stockés")
-    logger.info(f"  • Hiérarchie: sub-chunk → child → parent")
-    logger.info(f"  • Documents annotés avec ancres de navigation ✨")
-    # Message mis à jour pour refléter la nouvelle logique
-    logger.info(f"  • Annotation effectuée sur les child nodes (post-fusion) pour plus de robustesse.")
+    logger.info(f"✅ INDEXATION COMPLÈTE (STRUCTURE HIÉRARCHIQUE PRÉSERVÉE)")
     logger.info(f"{'=' * 80}\n")
 
 
-import time
 
 
-def index_creation_task(index_id: str, files_info: List[dict], metadata_json: str):
-    """
-    Tâche d'indexation complète :
-    1. Archivage des fichiers sources
-    2. Nettoyage HTML (si applicable)
-    3. Conversion via Docling
-    4. Création des fichiers .meta
-    5. Indexation LlamaIndex avec enrichissement des métadonnées
-    """
-    index_path = get_index_path(index_id)
-    md_files_dir = os.path.join(index_path, "md_files")
-    index_dir = os.path.join(index_path, "index")
-    source_files_archive = os.path.join(index_path, "source_files_archive")
-    source_files_temp = os.path.join(index_path, "source_files")
 
-    # ✅ Créer un fichier de statut "en cours"
-    status_file = os.path.join(index_path, ".indexing_status")
-    start_time = time.time()
-    with open(status_file, "w") as f:
-        json.dump({"status": "in_progress", "started_at": start_time}, f)
-
-    os.makedirs(md_files_dir, exist_ok=True)
-    os.makedirs(source_files_archive, exist_ok=True)
-
-    try:
-        metadata = json.loads(metadata_json) if metadata_json else {}
-        seen_basenames = set()
-
-        # ========================================
-        # PHASE 1 : CONVERSION DES FICHIERS
-        # ========================================
-        for file_info in files_info:
-            file_path = file_info["path"]  # Depuis source_files (temp)
-            original_filename = file_info["filename"]
-            normalized_basename, ext = os.path.splitext(normalize_filename(original_filename))
-
-            # Vérifier doublons
-            if normalized_basename in seen_basenames:
-                raise ValueError(f"Duplicate filename: {normalized_basename}")
-            seen_basenames.add(normalized_basename)
-
-            # ✅ Copier vers source_files_archive (permanent)
-            archived_filename = f"{normalized_basename}{ext}"
-            archive_destination = os.path.join(source_files_archive, archived_filename)
-
-            if file_path != archive_destination:
-                shutil.copy2(file_path, archive_destination)
-                logger.info(f"File archived: {archived_filename} → source_files_archive")
-
-            # Préparer les chemins de sortie
-            md_filename = f"{normalized_basename}.md"
-            md_filepath = os.path.join(md_files_dir, md_filename)
-            meta_filepath = os.path.join(md_files_dir, f"{md_filename}.meta")
-
-            # Créer le fichier .meta s'il n'existe pas
-            if not os.path.exists(meta_filepath):
-                source_url = metadata.get(original_filename, "URL not provided")
-                with open(meta_filepath, "w", encoding="utf-8") as f:
-                    json.dump({
-                        "source_url": source_url,
-                        "source_filename": archived_filename
-                    }, f)
-                logger.info(f"Metadata file created: {os.path.basename(meta_filepath)}")
-
-            # Skip si le markdown existe déjà
-            if os.path.exists(md_filepath):
-                logger.info(f"Markdown '{md_filename}' exists, skipping Docling")
-                continue
-
-            # ✨ Nettoyer le HTML avant Docling si c'est un fichier HTML
-            if ext.lower() in ['.html', '.htm']:
-                logger.info(f"📄 Fichier HTML détecté: {original_filename}")
-                try:
-                    cleaned_html_path = clean_html_before_docling(archive_destination)
-                    file_to_convert = cleaned_html_path
-                    cleanup_temp = True
-                except Exception as e:
-                    logger.warning(f"⚠️ Échec du nettoyage HTML, utilisation du fichier original: {e}")
-                    file_to_convert = archive_destination
-                    cleanup_temp = False
-            else:
-                file_to_convert = archive_destination
-                cleanup_temp = False
-
-            # Conversion via Docling
-            logger.info(f"Converting file '{original_filename}' via Docling...")
-            try:
-                with open(file_to_convert, "rb") as f:
-                    response = requests.post(
-                        DOCLING_URL,
-                        files={'files': (original_filename, f)},
-                        data={"table_mode": "accurate"},
-                    )
-                    response.raise_for_status()
-            except requests.exceptions.RequestException as req_err:
-                logger.error(f"Docling connection error for '{original_filename}': {req_err}")
-                if cleanup_temp and os.path.exists(file_to_convert):
-                    os.remove(file_to_convert)
-                continue
-            finally:
-                # Nettoyer le fichier temporaire
-                if cleanup_temp and os.path.exists(file_to_convert):
-                    os.remove(file_to_convert)
-                    logger.debug(f"   🗑️  Fichier temporaire supprimé")
-
-            # Traitement de la réponse Docling
-            raw_response_text = response.text
-            try:
-                repaired_json_string = raw_response_text.encode('latin-1').decode('utf-8')
-            except (UnicodeEncodeError, UnicodeDecodeError):
-                repaired_json_string = raw_response_text
-
-            response_data = json.loads(repaired_json_string)
-            md_content = response_data.get("document", {}).get("md_content", "")
-
-            # Nettoyage du Markdown
-            md_content_final = reconstruct_markdown_hierarchy(md_content) if should_reconstruct_hierarchy(
-                md_content) else md_content
-            cleaned_md = remove_duplicate_headers(md_content_final)
-
-            # Sauvegarder le Markdown
-            with open(md_filepath, "w", encoding="utf-8") as f:
-                f.write(cleaned_md)
-            logger.info(f"✓ Markdown saved: {md_filename}")
-
-        # ========================================
-        # PHASE 2 : INDEXATION LLAMAINDEX
-        # ========================================
-        logger.info(f"Starting LlamaIndex indexing for directory: {md_files_dir}")
-        init_settings()
-
-        # Charger tous les documents markdown
-        md_reader = SimpleDirectoryReader(
-            input_dir=md_files_dir,
-            required_exts=[".md"],
-            exclude=["*.meta"],
-            recursive=False
-        )
-        documents = md_reader.load_data()
-
-        # ✨ ENRICHIR chaque document avec les métadonnées du fichier .meta
-        logger.info(f"📝 Enriching documents with .meta information...")
-        for doc in documents:
-            md_filename = doc.metadata.get("file_name", "")
-
-            if md_filename:
-                md_filepath = os.path.join(md_files_dir, md_filename)
-                meta_info = load_metadata_from_meta_file(md_filepath)
-
-                # Ajouter source_url
-                if "source_url" in meta_info:
-                    doc.metadata["source_url"] = meta_info["source_url"]
-                    logger.info(f"  ✓ Added source_url for {md_filename}: {meta_info['source_url']}")
-                else:
-                    logger.info(f"  ⚠️  source_url missing in .meta for {md_filename}")
-
-                # Ajouter source_filename
-                if "source_filename" in meta_info:
-                    doc.metadata["source_filename"] = meta_info["source_filename"]
-
-        logger.info(f"📄 {len(documents)} documents loaded and enriched")
-
-        # Lancer l'indexation
-        run_indexing_logic(source_md_dir=md_files_dir, index_dir=index_dir)
-
-        # ✅ Marquer comme terminé avec succès
-        end_time = time.time()
-        with open(status_file, "w") as f:
-            json.dump({
-                "status": "completed",
-                "started_at": start_time,
-                "completed_at": end_time,
-                "duration_seconds": end_time - start_time,
-                "num_documents": len(files_info)
-            }, f)
-
-        logger.info(f"✅ Indexation terminée avec succès pour {index_id} en {end_time - start_time:.1f}s")
-
-    except Exception as e:
-        # ✅ Marquer comme échoué
-        end_time = time.time()
-        with open(status_file, "w") as f:
-            json.dump({
-                "status": "failed",
-                "error": str(e),
-                "error_type": type(e).__name__,
-                "started_at": start_time,
-                "failed_at": end_time,
-                "duration_seconds": end_time - start_time
-            }, f)
-
-        logger.error(f"❌ Error during indexing task for '{index_path}': {e}", exc_info=True)
-        if os.path.exists(index_dir):
-            shutil.rmtree(index_dir)
-        raise
-
-
-def load_metadata_from_meta_file(md_filepath: str) -> dict:
-    """
-    Charge les métadonnées depuis le fichier .meta correspondant au markdown.
-
-    Args:
-        md_filepath: Chemin vers le fichier .md
-
-    Returns:
-        Dict avec les métadonnées, ou {} si pas de fichier .meta
-    """
-    meta_filepath = md_filepath + ".meta"
-
-    if not os.path.exists(meta_filepath):
-        return {}
-
-    try:
-        with open(meta_filepath, 'r', encoding='utf-8') as f:
-            metadata = json.load(f)
-        return metadata
-    except Exception as e:
-        logger.warning(f"Failed to load .meta file {meta_filepath}: {e}")
-        return {}

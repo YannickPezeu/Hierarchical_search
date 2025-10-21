@@ -1,4 +1,4 @@
-# src/routes/files.py
+# src/routes/files.py - VERSION HIÉRARCHIQUE
 
 import os
 import logging
@@ -11,7 +11,6 @@ from src.routes.search import verify_internal_api_key, get_library_groups
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# Mapping des extensions vers les types MIME
 MIME_TYPES = {
     '.pdf': 'application/pdf',
     '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -29,10 +28,37 @@ MIME_TYPES = {
     '.xml': 'application/xml',
 }
 
-import glob
+
+def find_file_in_hierarchy(base_dir: str, filename_base: str) -> str:
+    """
+    Cherche un fichier dans toute l'arborescence d'un dossier.
+
+    Args:
+        base_dir: Dossier racine où chercher (ex: source_files_archive/)
+        filename_base: Nom de base du fichier sans extension (ex: "guide")
+
+    Returns:
+        Chemin complet vers le fichier trouvé, ou None
+    """
+    import glob
+
+    # Chercher récursivement tous les fichiers qui matchent
+    pattern = os.path.join(base_dir, "**", f"{filename_base}.*")
+    matching_files = glob.glob(pattern, recursive=True)
+
+    # Filtrer pour ne garder que les correspondances exactes
+    exact_matches = [
+        f for f in matching_files
+        if os.path.splitext(os.path.basename(f))[0] == filename_base
+    ]
+
+    return exact_matches[0] if exact_matches else None
 
 
-@router.get("/{index_id}/{filename}")
+CRAWLER_ARTIFACTS = ["metadata.json", "page.html"]
+
+
+@router.get("/{index_id}/{filename:path}")
 async def get_source_file(
         index_id: str,
         filename: str,
@@ -40,18 +66,31 @@ async def get_source_file(
         _: bool = Depends(verify_internal_api_key)
 ):
     """
-    Serves a source file from a specific library (any format).
-    Searches for the file regardless of extension.
+    Serves a source file from a specific library with hierarchical structure support.
+
+    ⚠️ NOUVEAU : Le filename peut contenir un chemin relatif
+    Exemples:
+    - /files/my_lib/guide.pdf
+    - /files/my_lib/campus/services/guide.pdf
 
     Args:
         index_id: The library identifier
-        filename: The filename (with or without extension)
+        filename: The filename with optional relative path
         user_groups: Comma-separated list of user's group IDs
 
     Returns:
         The requested file with appropriate MIME type
     """
     logger.info(f"📥 File request for: {index_id}/{filename}")
+
+    # ✅ NOUVEAU : Bloquer les artifacts du crawler
+    filename_base = os.path.basename(filename).lower()
+    if filename_base in CRAWLER_ARTIFACTS:
+        logger.warning(f"❌ Blocked request for crawler artifact: {filename_base}")
+        raise HTTPException(
+            status_code=403,
+            detail=f"Crawler artifacts ({filename_base}) cannot be served"
+        )
 
     # Vérifier les permissions de groupe
     library_groups = get_library_groups(index_id)
@@ -68,31 +107,53 @@ async def get_source_file(
     index_path = get_index_path(index_id)
     archive_dir = os.path.join(index_path, "source_files_archive")
 
-    # ✅ Extraire le nom de base sans extension
-    filename_base, _ = os.path.splitext(filename)
+    # ✅ NOUVEAU : Gérer les chemins avec hiérarchie
+    # Normaliser les séparateurs
+    filename_normalized = filename.replace("\\", "/")
 
-    # ✅ Chercher tous les fichiers qui commencent par ce nom de base
-    pattern = os.path.join(archive_dir, f"{filename_base}.*")
-    matching_files = glob.glob(pattern)
+    # Extraire le nom de base sans extension
+    filename_base = os.path.splitext(os.path.basename(filename_normalized))[0]
 
-    # ✅ Filtrer pour éviter les faux positifs (ex: "file.pdf" ne doit pas matcher "file.backup.pdf")
-    exact_matches = [
-        f for f in matching_files
-        if os.path.splitext(os.path.basename(f))[0] == filename_base
-    ]
+    # Stratégie 1 : Chemin direct (si le chemin relatif complet est fourni)
+    direct_path = os.path.join(archive_dir, filename_normalized)
 
-    if not exact_matches:
-        logger.error(f"❌ No file found matching: {filename_base}.*")
-        raise HTTPException(status_code=404, detail=f"File not found: {filename}")
+    # Chercher toutes les extensions possibles pour ce chemin direct
+    direct_dir = os.path.dirname(direct_path)
+    if os.path.exists(direct_dir):
+        import glob
+        pattern = os.path.join(direct_dir, f"{filename_base}.*")
+        direct_matches = glob.glob(pattern)
 
-    if len(exact_matches) > 1:
-        logger.warning(f"⚠️ Multiple files found for {filename_base}: {exact_matches}")
-        # Prendre le premier, mais log un warning
+        exact_direct_matches = [
+            f for f in direct_matches
+            if os.path.splitext(os.path.basename(f))[0] == filename_base
+        ]
 
-    file_path = exact_matches[0]
+        if exact_direct_matches:
+            file_path = exact_direct_matches[0]
+            logger.info(f"✅ Found via direct path: {os.path.relpath(file_path, archive_dir)}")
+        else:
+            # Stratégie 2 : Recherche dans toute l'arborescence
+            logger.info(f"🔍 Not found at direct path, searching hierarchy...")
+            file_path = find_file_in_hierarchy(archive_dir, filename_base)
+
+            if not file_path:
+                logger.error(f"❌ No file found matching: {filename_base}")
+                raise HTTPException(status_code=404, detail=f"File not found: {filename}")
+
+            logger.info(f"✅ Found via hierarchy search: {os.path.relpath(file_path, archive_dir)}")
+    else:
+        # Le dossier direct n'existe pas, chercher dans toute l'arborescence
+        logger.info(f"🔍 Direct directory doesn't exist, searching hierarchy...")
+        file_path = find_file_in_hierarchy(archive_dir, filename_base)
+
+        if not file_path:
+            logger.error(f"❌ No file found matching: {filename_base}")
+            raise HTTPException(status_code=404, detail=f"File not found: {filename}")
+
+        logger.info(f"✅ Found via hierarchy search: {os.path.relpath(file_path, archive_dir)}")
+
     actual_filename = os.path.basename(file_path)
-
-    logger.info(f"✅ Resolved: {filename} -> {actual_filename}")
 
     # Empêcher le path traversal
     if not os.path.abspath(file_path).startswith(os.path.abspath(archive_dir)):
@@ -105,13 +166,13 @@ async def get_source_file(
     if not media_type:
         media_type = mimetypes.guess_type(file_path)[0] or 'application/octet-stream'
 
-    logger.info(f"📤 Serving: {file_path} (type: {media_type})")
+    logger.info(f"📤 Serving: {os.path.relpath(file_path, archive_dir)} (type: {media_type})")
 
     return FileResponse(
         path=file_path,
         media_type=media_type,
         filename=actual_filename,
         headers={
-            "Content-Disposition": f'inline; filename="{actual_filename}"'  # ✅ inline au lieu de attachment
+            "Content-Disposition": f'inline; filename="{actual_filename}"'
         }
     )

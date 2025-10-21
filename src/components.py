@@ -8,7 +8,7 @@ load_dotenv()
 
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 import re
 import unicodedata
 import urllib.parse
@@ -142,7 +142,7 @@ class ApiReranker(BaseNodePostprocessor):
     model: str
     api_base: str
     api_key: str
-    custom_documents: Optional[List[str]] = None  # NEW: Store custom docs
+    custom_documents: Optional[List[str]] = None
 
     def _postprocess_nodes(
             self,
@@ -166,16 +166,34 @@ class ApiReranker(BaseNodePostprocessor):
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
+
+        # ✅ CORRECTION : Formatter correctement la requête
         data = {
             "model": self.model,
             "query": query_str,
             "documents": documents_to_rerank,
-            "top_k": self.top_n,
+            "top_n": self.top_n,  # ← Attention : certaines APIs utilisent "top_k" au lieu de "top_n"
         }
 
         try:
             print(f"🚀 Envoi de {len(documents_to_rerank)} documents au reranker (modèle: {self.model})...")
+
+            # ✅ NOUVEAU : Logger la requête pour debug
+            logger.debug(f"Rerank request URL: {rerank_url}")
+            logger.debug(f"Rerank request headers: {headers}")
+            logger.debug(f"Rerank request data keys: {list(data.keys())}")
+            logger.debug(f"Query length: {len(query_str)} chars")
+            logger.debug(f"Documents count: {len(documents_to_rerank)}")
+            logger.debug(f"First document preview: {documents_to_rerank[0][:200]}...")
+
             response = requests.post(rerank_url, headers=headers, json=data, timeout=180)
+
+            # ✅ NOUVEAU : Logger la réponse en cas d'erreur
+            if response.status_code != 200:
+                logger.error(f"Reranker API error {response.status_code}")
+                logger.error(f"Response: {response.text[:500]}")
+                raise requests.exceptions.HTTPError(f"{response.status_code} for {rerank_url}")
+
             response.raise_for_status()
             results = response.json()["results"]
 
@@ -195,12 +213,12 @@ class ApiReranker(BaseNodePostprocessor):
             return reranked_nodes[:self.top_n]
 
         except requests.exceptions.RequestException as e:
-            print(f"❌ Erreur lors de l'appel à l'API de reranking : {e}")
+            logger.error(f"❌ Erreur lors de l'appel à l'API de reranking : {e}")
+            # ✅ NOUVEAU : Retourner les nodes originaux au lieu de lever l'exception
             return nodes[:self.top_n]
         except (KeyError, IndexError) as e:
-            print(f"❌ Erreur lors du parsing de la réponse du reranker : {e}")
+            logger.error(f"❌ Erreur lors du parsing de la réponse du reranker : {e}")
             return nodes[:self.top_n]
-
 
 import logging
 # from typing import List
@@ -399,6 +417,138 @@ class MergeSmallNodes(TransformComponent):
 
         return all_parent_nodes
 
+    # À ajouter dans components.py dans la classe MergeSmallNodes
+
+    def _split_at_best_position(self, text: str, target_pos: int) -> Tuple[str, str]:
+        """
+        Coupe un texte à la position idéale proche de target_pos.
+        Priorité : double saut de ligne > point > position exacte
+        """
+        # Chercher un double saut de ligne dans une fenêtre autour de target_pos
+        window = 500  # Chercher dans ±500 chars
+        start = max(0, target_pos - window)
+        end = min(len(text), target_pos + window)
+
+        # Chercher le dernier double saut de ligne avant target_pos
+        search_area = text[start:target_pos]
+        double_newline_pos = search_area.rfind('\n\n')
+
+        if double_newline_pos != -1:
+            actual_pos = start + double_newline_pos + 2  # +2 pour garder le double \n avec la première partie
+            logger.info(f"         ✂️ Split at paragraph break (pos {actual_pos})")
+            return text[:actual_pos].rstrip(), text[actual_pos:].lstrip()
+
+        # Sinon chercher un point suivi d'espace/newline
+        search_area = text[start:end]
+        # Chercher tous les points suivis d'espace ou newline
+        import re
+        matches = list(re.finditer(r'\.\s', search_area))
+
+        if matches:
+            # Prendre le point le plus proche de target_pos
+            closest_match = min(matches, key=lambda m: abs((start + m.start()) - target_pos))
+            actual_pos = start + closest_match.end()
+            logger.info(f"         ✂️ Split at sentence end (pos {actual_pos})")
+            return text[:actual_pos].rstrip(), text[actual_pos:].lstrip()
+
+        # Fallback : couper à la position exacte
+        logger.warning(f"         ⚠️ No good split point found, cutting at exact position {target_pos}")
+        return text[:target_pos], text[target_pos:]
+
+    def _third_pass_split_oversized_nodes(
+            self,
+            all_nodes: List[TextNode],
+            tokenizer,
+            max_tokens: int = 8000,
+            char_threshold: int = 20000
+    ) -> List[TextNode]:
+        """
+        TROISIÈME PASSE : Split les nodes qui dépassent max_tokens.
+
+        Args:
+            all_nodes: Tous les nodes (child + parent)
+            tokenizer: Le tokenizer du reranker
+            max_tokens: Limite en tokens (8000 pour bge-reranker-v2-m3)
+            char_threshold: Ne tokenizer que les nodes > ce seuil (20k chars)
+        """
+        print(f"\n{'=' * 80}")
+        print(f"TROISIÈME PASSE : SPLIT DES NODES TROP GROS")
+        print(f"{'=' * 80}")
+        print(f"Paramètres : max {max_tokens} tokens, tokenize si > {char_threshold:,} chars")
+
+        result_nodes = []
+        split_count = 0
+        total_checked = 0
+
+        for node in all_nodes:
+            text_length = len(node.text)
+
+            # Ne tokenizer que les gros nodes
+            if text_length < char_threshold:
+                result_nodes.append(node)
+                continue
+
+            # Tokenizer le node
+            tokens = tokenizer.encode(node.text, add_special_tokens=False)
+            num_tokens = len(tokens)
+            total_checked += 1
+
+            logger.info(f"\n   📊 Node {node.id_[:8]}...")
+            logger.info(f"      • Caractères : {text_length:,}")
+            logger.info(f"      • Tokens : {num_tokens:,}")
+
+            # Si dans la limite, garder tel quel
+            if num_tokens <= max_tokens:
+                logger.info(f"      ✅ OK (sous la limite)")
+                result_nodes.append(node)
+                continue
+
+            # Dépasse la limite : split en deux
+            logger.warning(f"      ⚠️ DÉPASSE LA LIMITE ! Split en 2...")
+            split_count += 1
+
+            # Position cible : milieu du texte (en caractères)
+            target_char_pos = text_length // 2
+
+            # Trouver le meilleur endroit pour couper
+            first_half, second_half = self._split_at_best_position(node.text, target_char_pos)
+
+            # Créer deux nouveaux nodes
+            first_node = TextNode(
+                text=first_half,
+                metadata=node.metadata.copy(),
+            )
+
+            second_node = TextNode(
+                text=second_half,
+                metadata=node.metadata.copy(),
+            )
+
+            # Vérifier les tailles après split
+            first_tokens = len(tokenizer.encode(first_half, add_special_tokens=False))
+            second_tokens = len(tokenizer.encode(second_half, add_special_tokens=False))
+
+            logger.info(f"         → Part 1 : {len(first_half):,} chars, {first_tokens:,} tokens")
+            logger.info(f"         → Part 2 : {len(second_half):,} chars, {second_tokens:,} tokens")
+
+            # Si une des parties dépasse encore (rare), logger un warning
+            if first_tokens > max_tokens or second_tokens > max_tokens:
+                logger.error(f"         ❌ WARNING : Une partie dépasse encore la limite !")
+                logger.error(f"            Ce node nécessiterait plus de 2 splits")
+
+            result_nodes.extend([first_node, second_node])
+
+        print(f"\n{'=' * 80}")
+        print(f"RÉSULTAT TROISIÈME PASSE")
+        print(f"{'=' * 80}")
+        print(f"  • Nodes en entrée : {len(all_nodes)}")
+        print(f"  • Nodes > {char_threshold:,} chars vérifiés : {total_checked}")
+        print(f"  • Nodes splittés : {split_count}")
+        print(f"  • Nodes en sortie : {len(result_nodes)}")
+        print(f"{'=' * 80}\n")
+
+        return result_nodes
+
     def __call__(self, nodes: List[TextNode], **kwargs) -> List[TextNode]:
         if not nodes:
             return nodes
@@ -411,18 +561,32 @@ class MergeSmallNodes(TransformComponent):
         child_nodes = self._first_pass_merge_tiny_to_child(nodes)
         parent_nodes = self._second_pass_merge_child_to_parent(child_nodes)
 
+        # ✨ NOUVEAU : Charger le tokenizer et split les nodes trop gros
+        try:
+            from transformers import AutoTokenizer
+            tokenizer = AutoTokenizer.from_pretrained("BAAI/bge-reranker-v2-m3")
+
+            all_nodes_before_split = child_nodes + parent_nodes
+            all_nodes_after_split = self._third_pass_split_oversized_nodes(
+                all_nodes_before_split,
+                tokenizer,
+                max_tokens=8000,
+                char_threshold=20000
+            )
+
+        except Exception as e:
+            logger.error(f"❌ Erreur lors du split des nodes oversized : {e}")
+            logger.warning("⚠️ Continuing without token-based splitting")
+            all_nodes_after_split = child_nodes + parent_nodes
+
         print(f"\n{'=' * 80}")
-        print(f"HIÉRARCHIE FINALE CRÉÉE")
+        print(f"HIÉRARCHIE FINALE CRÉÉE (AVEC SPLIT OVERSIZED)")
         print(f"{'=' * 80}")
-        print(f"  • Child nodes (taille cible {self.child_min_size}-{self.child_max_size} chars): {len(child_nodes)}")
-        print(
-            f"  • Parent nodes (taille cible {self.parent_min_size}-{self.parent_max_size} chars): {len(parent_nodes)}")
-        print(f"  • TOTAL nodes retournés: {len(child_nodes) + len(parent_nodes)}")
-        print(f"\nHiérarchie: child -> parent")
-        print(f"Note: Les tiny nodes originaux ont été fusionnés et jetés")
+        print(f"  • Nodes finaux : {len(all_nodes_after_split)}")
+        print(f"  • (child + parent + splits)")
         print("=" * 80 + "\n")
 
-        return child_nodes + parent_nodes
+        return all_nodes_after_split
 
 
 class FilterTableOfContentsWithLLM(TransformComponent):

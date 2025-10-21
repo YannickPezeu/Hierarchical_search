@@ -280,7 +280,7 @@ async def search_in_index(
     rerank_model = os.getenv("RERANK_MODEL", "BAAI/bge-reranker-v2-m3")
 
     if rerank_api_base and rerank_api_key:
-        logger.info(f"📍 STEP 4: Reranking PARENT nodes with {rerank_model}")
+        logger.info(f"🚀 STEP 4: Reranking PARENT nodes with {rerank_model}")
 
         # Construire documents depuis les PARENT nodes
         parent_documents = []
@@ -311,30 +311,42 @@ async def search_in_index(
         )
 
         query_bundle = QueryBundle(query_str=request.query)
-        reranked_parent_nodes = reranker.postprocess_nodes(
-            temp_nodes_for_reranking,
-            query_bundle=query_bundle
-        )
 
-        logger.info(f"  → Reranking complete: {len(reranked_parent_nodes)} parents kept")
+        try:
+            reranked_parent_nodes = reranker.postprocess_nodes(
+                temp_nodes_for_reranking,
+                query_bundle=query_bundle
+            )
 
-        if not reranked_parent_nodes:
-            # Aucun résultat après reranking - fallback
-            logger.warning("  → No results after reranking, using top embedding results")
-            for pair in deduplicated_pairs[:15]:
+            logger.info(f"  → Reranking complete: {len(reranked_parent_nodes)} parents kept")
+
+            if not reranked_parent_nodes:
+                # Aucun résultat après reranking - fallback
+                logger.warning("  → No results after reranking, using top embedding results")
+                for pair in deduplicated_pairs[:15]:
+                    pair['rerank_score'] = pair['subchunk_score']
+                final_pairs = deduplicated_pairs[:15]
+            else:
+                # Reconstruire les pairs avec les nouveaux scores de reranking
+                final_pairs = []
+                for reranked in reranked_parent_nodes:
+                    for pair in deduplicated_pairs:
+                        if pair['parent_node'].id_ == reranked.node.id_:
+                            pair['rerank_score'] = reranked.score
+                            final_pairs.append(pair)
+                            break
+
+        except Exception as rerank_error:
+            # ✅ NOUVEAU : Gestion robuste des erreurs de reranking
+            logger.error(f"  ❌ Reranking failed: {rerank_error}")
+            logger.warning("  → Falling back to embedding scores only")
+
+            # Utiliser les scores d'embedding comme fallback
+            for pair in deduplicated_pairs:
                 pair['rerank_score'] = pair['subchunk_score']
             final_pairs = deduplicated_pairs[:15]
-        else:
-            # Reconstruire les pairs avec les nouveaux scores de reranking
-            final_pairs = []
-            for reranked in reranked_parent_nodes:
-                for pair in deduplicated_pairs:
-                    if pair['parent_node'].id_ == reranked.node.id_:
-                        pair['rerank_score'] = reranked.score
-                        final_pairs.append(pair)
-                        break
     else:
-        logger.warning(f"📍 STEP 4: Skipped (no reranker configured)")
+        logger.warning(f"🔍 STEP 4: Skipped (no reranker configured)")
         for pair in deduplicated_pairs:
             pair['rerank_score'] = pair['subchunk_score']
         final_pairs = deduplicated_pairs[:15]
@@ -342,7 +354,7 @@ async def search_in_index(
     # ========================================
     # ÉTAPE 5: Construire les résultats
     # ========================================
-    logger.info(f"📍 STEP 5: Building response with {len(final_pairs)} results")
+    logger.info(f"📊 STEP 5: Building response with {len(final_pairs)} results")
 
     results = []
     for pair in final_pairs:
@@ -357,7 +369,6 @@ async def search_in_index(
         header_path = child_node.metadata.get("header_path", "")
 
         if header_path and header_path != "/":
-            # Prendre la dernière section du chemin
             sections = [s.strip() for s in header_path.split("/") if s.strip()]
             if sections:
                 title = f"{file_name} - {sections[-1]}"
@@ -366,35 +377,34 @@ async def search_in_index(
         else:
             title = file_name
 
-        # Trouver le fichier source
-        file_name = child_node.metadata.get("file_name", "")
-        source_filename = None
+        # Utiliser source_filename au lieu de file_name pour le type
+        source_filename = child_node.metadata.get("source_filename")
 
-        if file_name:
-            filename_base = os.path.splitext(file_name)[0]
+        if not source_filename:
+            # Fallback : chercher dans l'archive avec le nom de base
+            file_name_base = os.path.splitext(file_name)[0]
             archive_dir = os.path.join(index_path, "source_files_archive")
-            pattern = os.path.join(archive_dir, f"{filename_base}.*")
-            matching_files = glob.glob(pattern)
+            pattern = os.path.join(archive_dir, "**", f"{file_name_base}.*")
+            matching_files = glob.glob(pattern, recursive=True)
 
             exact_matches = [
                 f for f in matching_files
-                if os.path.splitext(os.path.basename(f))[0] == filename_base
+                if os.path.splitext(os.path.basename(f))[0] == file_name_base
             ]
 
             if exact_matches:
                 source_filename = os.path.basename(exact_matches[0])
+                logger.debug(f"  Found source file via glob: {source_filename}")
 
+        # Construire file_url et file_type depuis source_filename
         if source_filename:
             file_url = source_filename
             file_type = os.path.splitext(source_filename)[1].lower().lstrip('.')
-        elif file_name:
+            logger.debug(f"  file_type={file_type} from source_filename={source_filename}")
+        else:
             file_url = file_name
             file_type = os.path.splitext(file_name)[1].lower().lstrip('.')
-        else:
-            file_url = None
-            file_type = None
-
-        # Dans la fonction search_in_index, section où tu construis les résultats
+            logger.warning(f"  ⚠️ Using file_name as fallback: {file_name} → type={file_type}")
 
         results.append(SearchResultNode(
             precise_content=precise_content,
@@ -405,21 +415,16 @@ async def search_in_index(
             header_path=child_node.metadata.get("header_path", "/"),
             file_url=file_url,
             file_type=file_type,
-            # ✨ NOUVEAU : Fragments pour text-fragment (HTML)
             search_text_start=child_node.metadata.get("search_text_start"),
             search_text_end=child_node.metadata.get("search_text_end"),
-            # Navigation PDF
             node_anchor_id=child_node.metadata.get("node_anchor_id"),
-            # Pour info/debug
             page_number=child_node.metadata.get("page_number"),
             page_confidence=child_node.metadata.get("page_confidence"),
             html_confidence=child_node.metadata.get("html_confidence"),
             node_hierarchy=pair['hierarchy']
         ))
 
-
     logger.info(f"✅ Search complete: {len(results)} results")
-    logger.info(f'results: {results}')
     logger.info(f"   Pipeline: sub-chunks → child nodes → parent dedup → parent reranking")
 
     return results
