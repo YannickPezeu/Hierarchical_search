@@ -152,6 +152,7 @@ def test_create_index_from_existing_files(client, api_key_header):
     Teste la création d'un index en utilisant les fichiers PDF
     placés manuellement dans le dossier source.
     """
+    print('Source Files dir:', os.path.realpath(SOURCE_FILES_DIR))
     assert os.path.exists(SOURCE_FILES_DIR), f"Dossier source introuvable: '{SOURCE_FILES_DIR}'"
     print(f"\n📁 Dossier des fichiers source : '{SOURCE_FILES_DIR}'")
     pdf_files = [f for f in os.listdir(SOURCE_FILES_DIR) if f.endswith('.pdf')]
@@ -418,3 +419,197 @@ def test_search_no_password_when_required(client, api_headers_json):
     )
     assert response.status_code == 401
     print("\n✅ Mot de passe manquant détecté")
+
+
+@pytest.mark.dependency()
+def test_corrupted_and_valid_pdf_handling(client, api_key_header):
+    """
+    Teste que :
+    1. Les PDFs corrompus sont détectés, supprimés et ne sont pas indexés
+    2. Les PDFs valides passent la validation et sont indexés correctement
+    """
+    # Setup : chemins des fichiers de test
+    test_data_dir = "tests/data"
+    corrupted_pdf_source = os.path.join(test_data_dir, "corruptedPDF.pdf")
+    valid_pdf_source = os.path.join(test_data_dir, "validPDF.pdf")
+
+    # Vérifier que les fichiers de test existent
+    assert os.path.exists(corrupted_pdf_source), f"Fichier de test manquant: {corrupted_pdf_source}"
+    assert os.path.exists(valid_pdf_source), f"Fichier de test manquant: {valid_pdf_source}"
+
+    print(f"\n📋 Test de validation PDF")
+    print(f"   - PDF corrompu : {corrupted_pdf_source}")
+    print(f"   - PDF valide : {valid_pdf_source}")
+
+    # Créer un index temporaire pour ce test
+    test_index_id = "test_pdf_validation"
+    test_index_path = os.path.join(INDEXES_DIR, test_index_id)
+
+    # Nettoyer si existe déjà
+    if os.path.exists(test_index_path):
+        shutil.rmtree(test_index_path)
+        print(f"   - Nettoyage de l'index précédent")
+
+    # Préparer l'upload (on copie pour ne pas perdre les originaux)
+    files_to_upload = []
+    metadata = {}
+    open_files = []
+
+    try:
+        # Copier et ouvrir le PDF corrompu
+        with open(corrupted_pdf_source, 'rb') as src:
+            corrupted_content = src.read()
+
+        # Créer un fichier temporaire pour le PDF corrompu
+        import tempfile
+        corrupted_temp = tempfile.NamedTemporaryFile(delete=False, suffix='_corruptedPDF_copy.pdf')
+        corrupted_temp.write(corrupted_content)
+        corrupted_temp.close()
+
+        # Copier et ouvrir le PDF valide
+        with open(valid_pdf_source, 'rb') as src:
+            valid_content = src.read()
+
+        valid_temp = tempfile.NamedTemporaryFile(delete=False, suffix='_validPDF_copy.pdf')
+        valid_temp.write(valid_content)
+        valid_temp.close()
+
+        # Préparer les fichiers pour l'upload
+        corrupted_handle = open(corrupted_temp.name, 'rb')
+        valid_handle = open(valid_temp.name, 'rb')
+        open_files.extend([corrupted_handle, valid_handle])
+
+        files_to_upload.append(('files', ('corruptedPDF_copy.pdf', corrupted_handle, 'application/pdf')))
+        files_to_upload.append(('files', ('validPDF_copy.pdf', valid_handle, 'application/pdf')))
+
+        metadata['corruptedPDF_copy.pdf'] = "http://example.com/test/corrupted.pdf"
+        metadata['validPDF_copy.pdf'] = "http://example.com/test/valid.pdf"
+
+        print(f"📤 Envoi de 2 fichiers (1 corrompu + 1 valide)...")
+
+        # Envoyer la requête
+        response = client.post(
+            f"/index/{test_index_id}",
+            files=files_to_upload,
+            data={
+                "metadata_json": json.dumps(metadata),
+                "groups": json.dumps(["test-pdf-group"])
+            },
+            headers=api_key_header
+        )
+    finally:
+        # Fermer les fichiers
+        for f in open_files:
+            f.close()
+        # Supprimer les fichiers temporaires
+        try:
+            os.unlink(corrupted_temp.name)
+            os.unlink(valid_temp.name)
+        except:
+            pass
+
+    assert response.status_code == 202, f"Indexation non acceptée: {response.json()}"
+    print(f"   ✅ Requête d'indexation acceptée (202)")
+
+    # Attendre la fin de l'indexation
+    try:
+        status_data = wait_for_indexing_completion(
+            client=client,
+            index_id=test_index_id,
+            api_headers=api_key_header,
+            timeout=120,
+            poll_interval=2
+        )
+    except Exception as e:
+        # Afficher les logs si disponibles
+        if os.path.exists(test_index_path):
+            status_file = os.path.join(test_index_path, ".indexing_status")
+            if os.path.exists(status_file):
+                with open(status_file, 'r') as f:
+                    print(f"\n⚠️ Statut d'indexation: {f.read()}")
+        pytest.fail(f"Erreur lors de l'indexation: {e}")
+
+    # VÉRIFICATIONS
+    print(f"\n🔍 Vérification des résultats...")
+
+    # 1. Vérifier que le PDF corrompu n'est PAS dans l'archive
+    archive_dir = os.path.join(test_index_path, "source_files_archive")
+    archived_corrupted = os.path.join(archive_dir, "corruptedPDF_copy.pdf")
+
+    if os.path.exists(archived_corrupted):
+        pytest.fail("❌ Le PDF corrompu ne devrait PAS être archivé (il devrait avoir été supprimé)")
+    print("   ✅ PDF corrompu non archivé (supprimé comme attendu)")
+
+    # 2. Vérifier que le PDF valide EST dans l'archive
+    archived_valid = os.path.join(archive_dir, "validPDF_copy.pdf")
+    if not os.path.exists(archived_valid):
+        # Lister le contenu de l'archive pour debug
+        if os.path.exists(archive_dir):
+            print(f"\n   📁 Contenu de {archive_dir}:")
+            for item in os.listdir(archive_dir):
+                print(f"      - {item}")
+        pytest.fail("❌ Le PDF valide devrait être archivé")
+    print("   ✅ PDF valide archivé correctement")
+
+    # 3. Vérifier que le markdown du PDF valide a été créé
+    md_dir = os.path.join(test_index_path, "md_files")
+    valid_md = os.path.join(md_dir, "validPDF_copy.md")
+    if not os.path.exists(valid_md):
+        # Lister le contenu pour debug
+        if os.path.exists(md_dir):
+            print(f"\n   📁 Contenu de {md_dir}:")
+            for item in os.listdir(md_dir):
+                print(f"      - {item}")
+        pytest.fail("❌ Le markdown du PDF valide devrait exister")
+    print("   ✅ Markdown créé pour le PDF valide")
+
+    # 4. Vérifier que le markdown du PDF corrompu n'existe PAS
+    corrupted_md = os.path.join(md_dir, "corruptedPDF_copy.md")
+    if os.path.exists(corrupted_md):
+        pytest.fail("❌ Le markdown du PDF corrompu ne devrait PAS exister")
+    print("   ✅ Aucun markdown pour le PDF corrompu (comme attendu)")
+
+    # 5. Vérifier le nombre de documents indexés dans le statut
+    num_docs = status_data.get("num_documents", 0)
+    if num_docs != 1:
+        pytest.fail(f"❌ Devrait avoir indexé 1 document (le valide), mais a indexé {num_docs}")
+    print(f"   ✅ Nombre de documents indexés: {num_docs} (correct)")
+
+    # 6. Vérifier que les nodes du PDF valide sont dans l'index
+    index_dir = os.path.join(test_index_path, "index")
+    docstore_file = os.path.join(index_dir, "docstore.json")
+
+    if os.path.exists(docstore_file):
+        with open(docstore_file, 'r') as f:
+            docstore_data = json.load(f)
+            num_nodes = len(docstore_data.get("docstore/data", {}))
+            print(f"   ✅ Nodes indexés: {num_nodes}")
+            if num_nodes == 0:
+                pytest.fail("❌ Aucun node trouvé pour le PDF valide")
+    else:
+        pytest.fail(f"❌ Docstore introuvable: {docstore_file}")
+
+    # 7. Vérifier que le contenu du markdown est correct (pas vide)
+    with open(valid_md, 'r', encoding='utf-8') as f:
+        md_content = f.read()
+        if len(md_content) < 50:
+            pytest.fail(f"❌ Le markdown du PDF valide est trop court ({len(md_content)} chars)")
+        print(f"   ✅ Markdown du PDF valide contient {len(md_content)} caractères")
+
+    print(f"\n{'=' * 80}")
+    print(f"✅ TEST DE VALIDATION PDF RÉUSSI")
+    print(f"{'=' * 80}")
+    print(f"   📊 Résumé:")
+    print(f"      - PDF corrompu : détecté et rejeté ✓")
+    print(f"      - PDF corrompu : supprimé du système ✓")
+    print(f"      - PDF valide : validé et archivé ✓")
+    print(f"      - PDF valide : converti en markdown ✓")
+    print(f"      - PDF valide : indexé ({num_nodes} nodes) ✓")
+    print(f"{'=' * 80}\n")
+
+    # Cleanup
+    if os.path.exists(test_index_path):
+        shutil.rmtree(test_index_path)
+        print(f"🧹 Nettoyage de l'index de test effectué")
+
+

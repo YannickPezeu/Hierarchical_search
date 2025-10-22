@@ -116,13 +116,18 @@ async def create_index(
     files_info = []
 
     CRAWLER_ARTIFACTS = ["metadata.json", "page.html"]
-
+    UNSUPPORTED_EXTENSIONS = [".doc"]
 
     for file in files:
         # Le filename peut contenir le chemin relatif si uploadé depuis un scraper
         # Exemple: "campus/services/hash/guide.pdf"
         if file.filename.lower() in CRAWLER_ARTIFACTS:
             logger.info(f"  ⏭️  Skipped: {file.filename} (crawler metadata)")
+            continue
+
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        if file_ext in UNSUPPORTED_EXTENSIONS:
+            logger.warning(f"  ⚠️ Skipped: {file.filename} (unsupported format: {file_ext})")
             continue
 
         original_filename = file.filename

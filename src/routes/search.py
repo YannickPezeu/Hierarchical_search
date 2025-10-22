@@ -368,14 +368,7 @@ async def search_in_index(
         file_name = child_node.metadata.get("file_name", "Unknown")
         header_path = child_node.metadata.get("header_path", "")
 
-        if header_path and header_path != "/":
-            sections = [s.strip() for s in header_path.split("/") if s.strip()]
-            if sections:
-                title = f"{file_name} - {sections[-1]}"
-            else:
-                title = file_name
-        else:
-            title = file_name
+        title = file_name
 
         # Utiliser source_filename au lieu de file_name pour le type
         source_filename = child_node.metadata.get("source_filename")

@@ -386,6 +386,7 @@ def index_creation_task(index_id: str, files_info: List[dict], metadata_json: st
 
         seen_basenames = set()
         skipped_duplicates = []  # Track skipped duplicate files
+        skipped_validation = []
 
         files_info = [
             f for f in files_info
@@ -412,6 +413,91 @@ def index_creation_task(index_id: str, files_info: List[dict], metadata_json: st
 
             # Normaliser le nom de fichier
             normalized_basename, ext = os.path.splitext(normalize_filename(original_filename))
+
+            # ✅ BLOQUER LES .doc
+            if ext.lower() == '.doc':
+                logger.warning(f"⚠️ Skipping unsupported format: {original_filename} (.doc)")
+                skipped_validation.append({
+                    "filename": original_filename,
+                    "reason": "unsupported_format",
+                    "type": ".doc"
+                })
+                continue
+
+            # ✅ VALIDER LES PDFs
+            if ext.lower() == '.pdf':
+                try:
+                    # Vérifier les magic bytes (signature PDF)
+                    with open(file_path, 'rb') as f:
+                        header = f.read(5)
+
+                    if not header.startswith(b'%PDF-'):
+                        logger.error(f"❌ Invalid PDF signature (not a real PDF): {original_filename}")
+                        logger.error(f"   Header bytes: {header}")
+                        logger.error(f"   This looks like: {header.decode('utf-8', errors='ignore')}")
+                        logger.error(f"   Deleting fake PDF: {file_path}")
+                        os.remove(file_path)
+                        skipped_validation.append({
+                            "filename": original_filename,
+                            "reason": "invalid_pdf_signature",
+                            "header": header.decode('utf-8', errors='ignore')[:50]
+                        })
+                        continue
+
+                    # Vérifier avec PyMuPDF
+                    start = time.time()
+                    test_doc = pymupdf.open(file_path)
+
+                    num_pages = len(test_doc)
+
+                    if num_pages == 0:
+                        test_doc.close()
+                        logger.error(f"❌ PDF has no pages: {original_filename}")
+                        logger.error(f"   Deleting corrupted file: {file_path}")
+                        os.remove(file_path)
+                        skipped_validation.append({
+                            "filename": original_filename,
+                            "reason": "pdf_no_pages"
+                        })
+                        continue
+
+                    # Vérifier qu'on peut lire au moins une page
+                    try:
+                        first_page_text = test_doc[0].get_text()
+                        test_doc.close()
+                    except Exception as read_error:
+                        test_doc.close()
+                        logger.error(f"❌ Cannot read PDF pages: {original_filename}")
+                        logger.error(f"   Error: {read_error}")
+                        logger.error(f"   Deleting file: {file_path}")
+                        os.remove(file_path)
+                        skipped_validation.append({
+                            "filename": original_filename,
+                            "reason": "pdf_unreadable",
+                            "error": str(read_error)
+                        })
+                        continue
+
+                    elapsed = time.time() - start
+                    logger.info(f"✅ PDF OK: {num_pages} pages, validation took {elapsed * 1000:.0f}ms")
+
+                except Exception as e:
+                    logger.error(f"❌ Error validating PDF: {original_filename}")
+                    logger.error(f"   Error: {e}")
+                    logger.error(f"   Deleting file: {file_path}")
+
+                    try:
+                        os.remove(file_path)
+                        logger.info(f"   ✅ File deleted successfully")
+                    except Exception as del_error:
+                        logger.error(f"   ⚠️ Failed to delete file: {del_error}")
+
+                    skipped_validation.append({
+                        "filename": original_filename,
+                        "reason": "pdf_validation_error",
+                        "error": str(e)
+                    })
+                    continue
 
             relative_dir = os.path.dirname(relative_path)
             md_dir_for_file = os.path.join(md_files_dir, relative_dir)
@@ -589,6 +675,15 @@ def index_creation_task(index_id: str, files_info: List[dict], metadata_json: st
                 logger.warning(f"  • {dup['filename']} → {dup['normalized']} at {dup['path']}")
             logger.warning(f"{'=' * 80}\n")
 
+        # Log summary of skipped files due to validation
+        if skipped_validation:
+            logger.warning(f"\n{'=' * 80}")
+            logger.warning(f"⚠️ FILES REJECTED BY VALIDATION: {len(skipped_validation)}")
+            logger.warning(f"{'=' * 80}")
+            for skip in skipped_validation:
+                logger.warning(f"  • {skip['filename']} - Reason: {skip['reason']}")
+            logger.warning(f"{'=' * 80}\n")
+
         # ========================================
         # PHASE 2 : INDEXATION LLAMAINDEX (inchangée)
         # ========================================
@@ -597,7 +692,7 @@ def index_creation_task(index_id: str, files_info: List[dict], metadata_json: st
 
         # Marquer comme terminé avec succès
         end_time = time.time()
-        actual_files_processed = len(files_info) - len(skipped_duplicates)
+        actual_files_processed = len(files_info) - len(skipped_duplicates) - len(skipped_validation)
 
         with open(status_file, "w") as f:
             json.dump({
