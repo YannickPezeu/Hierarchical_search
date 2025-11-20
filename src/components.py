@@ -288,7 +288,7 @@ class MergeSmallNodes(TransformComponent):
             current_group = list(reversed(current_group))
             merge_groups.append(current_group)
 
-        return merge_groups
+        return list(reversed(merge_groups))
 
     def _create_merged_node_from_group(self, source_nodes: List[TextNode]) -> TextNode:
         """Crée un node fusionné à partir d'un groupe de source nodes."""

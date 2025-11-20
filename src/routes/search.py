@@ -1,3 +1,4 @@
+# src/routes/search.py - VERSION AVEC CACHE
 import os
 import json
 import logging
@@ -17,6 +18,7 @@ from src.components import ApiReranker
 from src.core.config import INDEX_CACHE
 from src.core.models import SearchRequest, SearchResultNode
 from src.core.utils import get_index_path, verify_password
+from src.core.cache import search_cache  # ✨ NOUVEAU : Import du cache
 import glob
 
 logger = logging.getLogger(__name__)
@@ -113,6 +115,91 @@ def get_child_and_parent_from_subchunk(subchunk_node, docstore) -> tuple:
         return child_node, child_node, f"Cannot find parent {parent_node_id}, using child: {e}"
 
 
+def build_result_from_cache(
+        child_node_id: str,
+        parent_node_id: str,
+        score: float,
+        docstore,
+        index_path: str
+) -> SearchResultNode:
+    """
+    ✨ NOUVEAU : Reconstruit un SearchResultNode à partir d'IDs cachés.
+
+    Args:
+        child_node_id: ID du child node
+        parent_node_id: ID du parent node
+        score: Score du résultat
+        docstore: Docstore pour récupérer les nodes
+        index_path: Chemin de l'index
+
+    Returns:
+        SearchResultNode complet
+    """
+    try:
+        child_node = docstore.get_node(child_node_id)
+        parent_node = docstore.get_node(parent_node_id)
+
+        precise_content = child_node.get_content()
+        context_content = parent_node.get_content()
+
+        # Construire le titre depuis file_name et header_path
+        file_name = child_node.metadata.get("file_name", "Unknown")
+        header_path = child_node.metadata.get("header_path", "")
+
+        title = file_name
+
+        # Utiliser source_filename au lieu de file_name pour le type
+        source_filename = child_node.metadata.get("source_filename")
+
+        if not source_filename:
+            # Fallback : chercher dans l'archive avec le nom de base
+            file_name_base = os.path.splitext(file_name)[0]
+            archive_dir = os.path.join(index_path, "source_files_archive")
+            pattern = os.path.join(archive_dir, "**", f"{file_name_base}.*")
+            matching_files = glob.glob(pattern, recursive=True)
+
+            exact_matches = [
+                f for f in matching_files
+                if os.path.splitext(os.path.basename(f))[0] == file_name_base
+            ]
+
+            if exact_matches:
+                source_filename = os.path.basename(exact_matches[0])
+                logger.debug(f"  Found source file via glob: {source_filename}")
+
+        # Construire file_url et file_type depuis source_filename
+        if source_filename:
+            file_url = source_filename
+            file_type = os.path.splitext(source_filename)[1].lower().lstrip('.')
+            logger.debug(f"  file_type={file_type} from source_filename={source_filename}")
+        else:
+            file_url = file_name
+            file_type = os.path.splitext(file_name)[1].lower().lstrip('.')
+            logger.warning(f"  ⚠️ Using file_name as fallback: {file_name} → type={file_type}")
+
+        return SearchResultNode(
+            precise_content=precise_content,
+            context_content=context_content,
+            score=score,
+            title=str(title),
+            source_url=child_node.metadata.get("source_url", "URL not found"),
+            header_path=child_node.metadata.get("header_path", "/"),
+            file_url=file_url,
+            file_type=file_type,
+            search_text_start=child_node.metadata.get("search_text_start"),
+            search_text_end=child_node.metadata.get("search_text_end"),
+            node_anchor_id=child_node.metadata.get("node_anchor_id"),
+            page_number=child_node.metadata.get("page_number"),
+            page_confidence=child_node.metadata.get("page_confidence"),
+            html_confidence=child_node.metadata.get("html_confidence"),
+            node_hierarchy="cached"
+        )
+
+    except Exception as e:
+        logger.error(f"❌ Error building result from cache: {e}")
+        raise
+
+
 @router.post("/{index_id}", response_model=List[SearchResultNode])
 async def search_in_index(
         index_id: str,
@@ -120,15 +207,23 @@ async def search_in_index(
         _: bool = Depends(verify_internal_api_key)
 ):
     """
-    Recherche avec hiérarchie à 3 niveaux:
+    Recherche avec hiérarchie à 3 niveaux + CACHE:
+
+    Pipeline SANS CACHE :
     1. Retrieval sur sub-chunks (512 tokens)
     2. Remontée vers child nodes (2000+ chars)
     3. Remontée vers parent nodes (merged, ~10k chars)
-    4. Reranking sur PARENT nodes (changé depuis child)
+    4. Reranking sur PARENT nodes
     5. Retour: precise_content (child) + context_content (parent)
+
+    Pipeline AVEC CACHE :
+    1. Vérifier le cache (RAM puis Disque)
+    2. Si hit : Reconstruire les résultats depuis les IDs cachés
+    3. Si miss : Pipeline complet + sauvegarder dans le cache
     """
     logger.info(f"🔍 Search request for library: {index_id}")
     logger.info(f"👥 User groups: {request.user_groups}")
+    logger.info(f"📝 Query: '{request.query}'")
 
     # Vérifications de permissions (code inchangé)
     library_groups = get_library_groups(index_id)
@@ -158,7 +253,17 @@ async def search_in_index(
         if not verify_password(request.password, hashed_password):
             raise HTTPException(status_code=403, detail="Incorrect password")
 
-    # Charger l'index (code similaire)
+    # ========================================
+    # ✨ NOUVEAU : VÉRIFIER LE CACHE
+    # ========================================
+    cached_results = search_cache.get(
+        query=request.query,
+        index_id=index_id,
+        index_path=index_path,
+        user_groups=request.user_groups
+    )
+
+    # Charger l'index (nécessaire même pour le cache, pour accéder au docstore)
     if index_dir not in INDEX_CACHE:
         logger.info(f"Loading index from disk: {index_dir}")
         init_settings()
@@ -183,6 +288,39 @@ async def search_in_index(
     else:
         base_retriever, storage_context = INDEX_CACHE[index_dir]
 
+    # Accéder au docstore pour reconstruire les résultats depuis le cache
+    docstore = storage_context.docstore
+
+    # ========================================
+    # Si résultats cachés : Reconstruction rapide
+    # ========================================
+    if cached_results is not None:
+        logger.info(f"✨ Cache HIT! Rebuilding {len(cached_results)} results from cached IDs")
+
+        results = []
+        for child_id, parent_id, score in cached_results:
+            try:
+                result = build_result_from_cache(
+                    child_node_id=child_id,
+                    parent_node_id=parent_id,
+                    score=score,
+                    docstore=docstore,
+                    index_path=index_path
+                )
+                results.append(result)
+            except Exception as e:
+                logger.error(f"❌ Error rebuilding cached result: {e}")
+                # Continuer avec les autres résultats
+                continue
+
+        logger.info(f"✅ Cache reconstruction complete: {len(results)} results")
+        return results
+
+    # ========================================
+    # Cache miss : Pipeline complet de recherche
+    # ========================================
+    logger.info(f"🔍 Cache MISS! Running full search pipeline")
+
     # ========================================
     # ÉTAPE 1: Retrieval initial (sub-chunks)
     # ========================================
@@ -191,23 +329,27 @@ async def search_in_index(
     logger.info(f"  → Retrieved {len(subchunk_results)} sub-chunks")
 
     # ========================================
-    # ÉTAPE 2: Remonter vers child et parent + DÉDUPLICATION
+    # ÉTAPE 2: Remonter la hiérarchie (sub-chunk → child → parent)
     # ========================================
     logger.info(f"📍 STEP 2: Climbing hierarchy (sub-chunk → child → parent)")
 
-    # Dictionnaire pour dédupliquer : {child_node_id: pair_info}
     unique_child_parent_pairs = {}
-    hierarchy_stats = {"success": 0, "standalone": 0, "errors": 0, "duplicates": 0}
+    hierarchy_stats = {
+        "success": 0,
+        "standalone": 0,
+        "errors": 0,
+        "duplicates": 0
+    }
 
     for subchunk_result in subchunk_results:
         child_node, parent_node, hierarchy_info = get_child_and_parent_from_subchunk(
             subchunk_result.node,
-            storage_context.docstore
+            docstore
         )
 
         if child_node is None:
-            logger.warning(f"  ⚠️ Failed to climb hierarchy: {hierarchy_info}")
             hierarchy_stats["errors"] += 1
+            logger.debug(f"  ⚠️ Hierarchy error: {hierarchy_info}")
             continue
 
         if "standalone" in hierarchy_info:
@@ -215,20 +357,20 @@ async def search_in_index(
         else:
             hierarchy_stats["success"] += 1
 
-        # Vérifier si on a déjà vu ce child node
         child_id = child_node.id_
 
         if child_id in unique_child_parent_pairs:
-            # Doublon détecté - garder le meilleur score
             hierarchy_stats["duplicates"] += 1
             existing_score = unique_child_parent_pairs[child_id]['subchunk_score']
-
             if subchunk_result.score > existing_score:
-                # Ce sub-chunk a un meilleur score, on le garde
-                unique_child_parent_pairs[child_id]['subchunk_score'] = subchunk_result.score
-                unique_child_parent_pairs[child_id]['original_subchunk'] = subchunk_result.node
+                unique_child_parent_pairs[child_id] = {
+                    'subchunk_score': subchunk_result.score,
+                    'child_node': child_node,
+                    'parent_node': parent_node,
+                    'hierarchy': hierarchy_info,
+                    'original_subchunk': subchunk_result.node
+                }
         else:
-            # Nouveau child node
             unique_child_parent_pairs[child_id] = {
                 'subchunk_score': subchunk_result.score,
                 'child_node': child_node,
@@ -357,6 +499,8 @@ async def search_in_index(
     logger.info(f"📊 STEP 5: Building response with {len(final_pairs)} results")
 
     results = []
+    cache_data = []  # ✨ NOUVEAU : Préparer les données pour le cache
+
     for pair in final_pairs:
         child_node = pair['child_node']
         parent_node = pair['parent_node']
@@ -417,7 +561,67 @@ async def search_in_index(
             node_hierarchy=pair['hierarchy']
         ))
 
+        # ✨ NOUVEAU : Préparer les données pour le cache (seulement IDs + score)
+        cache_data.append((
+            child_node.id_,
+            parent_node.id_,
+            pair['rerank_score']
+        ))
+
+    # ========================================
+    # ✨ NOUVEAU : SAUVEGARDER DANS LE CACHE
+    # ========================================
+    search_cache.set(
+        query=request.query,
+        index_id=index_id,
+        index_path=index_path,
+        user_groups=request.user_groups,
+        results=cache_data
+    )
+
     logger.info(f"✅ Search complete: {len(results)} results")
-    logger.info(f"   Pipeline: sub-chunks → child nodes → parent dedup → parent reranking")
+    logger.info(f"   Pipeline: sub-chunks → child nodes → parent dedup → parent reranking → CACHED")
 
     return results
+
+
+@router.get("/{index_id}/cache/stats")
+async def get_cache_stats(
+        index_id: str,
+        _: bool = Depends(verify_internal_api_key)
+):
+    """
+    ✨ NOUVEAU : Endpoint pour obtenir les statistiques du cache.
+    """
+    stats = search_cache.get_stats()
+
+    total_requests = stats["ram_hits"] + stats["disk_hits"] + stats["misses"]
+    hit_rate = 0
+    if total_requests > 0:
+        hit_rate = ((stats["ram_hits"] + stats["disk_hits"]) / total_requests) * 100
+
+    return {
+        "cache_stats": stats,
+        "total_requests": total_requests,
+        "hit_rate_percentage": round(hit_rate, 2),
+        "ram_cache_size": len(search_cache.ram_cache)
+    }
+
+
+@router.delete("/{index_id}/cache")
+async def clear_index_cache(
+        index_id: str,
+        _: bool = Depends(verify_internal_api_key)
+):
+    """
+    ✨ NOUVEAU : Endpoint pour vider le cache d'un index spécifique.
+
+    Utile lors de la réindexation d'une bibliothèque.
+    """
+    index_path = get_index_path(index_id)
+    search_cache.clear_index_cache(index_path)
+
+    return {
+        "status": "success",
+        "message": f"Cache cleared for index: {index_id}"
+    }

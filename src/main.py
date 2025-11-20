@@ -47,4 +47,4 @@ app.include_router(libraries.router, prefix="/libraries", tags=["libraries"])  #
 # 5. Main execution block
 if __name__ == '__main__':
     # Note the path to the app object: "src.main:app"
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8079, reload=True)
+    uvicorn.run("src.main:app", host="0.0.0.0", port=8079, reload=False)

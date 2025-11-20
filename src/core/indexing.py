@@ -31,6 +31,7 @@ from src.core.config import DOCLING_URL
 from src.core.utils import get_index_path
 from src.core.indexing_html import _annotate_html_with_anchors, clean_html_before_docling
 import time
+from src.core.cache import search_cache
 
 
 logger = logging.getLogger(__name__)
@@ -365,6 +366,10 @@ def index_creation_task(index_id: str, files_info: List[dict], metadata_json: st
     start_time = time.time()
     with open(status_file, "w") as f:
         json.dump({"status": "in_progress", "started_at": start_time}, f)
+
+    # ✨ NOUVEAU : Nettoyer le cache pour cet index lors de la réindexation
+    logger.info(f"🗑️  Clearing cache for index: {index_id}")
+    search_cache.clear_index_cache(index_path)
 
     os.makedirs(md_files_dir, exist_ok=True)
     os.makedirs(source_files_archive, exist_ok=True)

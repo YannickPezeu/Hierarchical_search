@@ -1,0 +1,213 @@
+2025-10-28 11:56:00.697 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 11:56:00.700 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 11:56:00.700 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 11:56:04.332 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 11:56:04.334 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 11:56:04.334 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 11:56:04.416 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:56:04.449 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:56:05.060 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:56:07.001 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:56:24.737 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:56:32.977 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 11:56:32.980 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 11:56:32.980 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 11:56:33.025 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 11:56:33.027 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 11:56:33.027 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 11:56:33.071 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:56:33.111 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:56:33.262 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:56:34.472 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:56:38.662 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:56:49.515 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 11:56:49.517 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 11:56:49.518 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 11:56:53.869 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 11:56:53.871 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 11:56:53.871 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 11:56:53.938 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:56:53.980 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:56:54.174 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:56:56.053 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:57:19.247 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:58:10.837 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 11:58:10.839 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 11:58:10.839 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 11:58:14.389 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 11:58:14.391 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 11:58:14.392 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 11:58:14.437 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:58:14.470 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:58:14.658 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:58:15.807 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:58:25.842 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:58:30.650 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 11:58:30.653 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 11:58:30.653 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 11:58:35.573 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 11:58:35.575 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 11:58:35.575 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 11:58:35.638 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:58:35.678 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:58:35.858 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:58:37.517 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:58:45.171 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:00:20.154 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:00:20.295 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:00:28.141 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 12:00:28.143 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:00:28.143 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:00:32.405 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:00:32.406 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:00:32.406 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:00:32.471 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:00:32.510 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:00:32.701 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:00:34.119 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:00:53.232 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 12:00:53.235 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:00:53.235 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:00:57.680 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:00:57.682 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:00:57.682 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:00:57.741 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:00:57.780 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:00:57.942 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:00:59.392 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:01:03.437 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:01:04.680 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:01:09.176 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:01:10.069 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 12:01:10.072 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:01:10.072 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:01:13.908 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:01:13.910 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:01:13.910 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:01:14.004 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:01:14.042 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:01:14.269 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:01:15.830 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:01:22.396 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:03:14.538 | INFO     | open_webui.routers.auths:signin:471 - Signin request: sarah.aubort@epfl.ch
+2025-10-28 12:03:14.538 | INFO     | open_webui.models.auths:authenticate_user:126 - authenticate_user: sarah.aubort@epfl.ch
+2025-10-28 12:03:21.736 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST https://login.microsoftonline.com/f6c2556a-c4fb-4ab1-a2c7-9e220df11c43/oauth2/v2.0/token "HTTP/1.1 200 OK"
+2025-10-28 12:03:21.895 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: GET https://graph.microsoft.com/oidc/userinfo "HTTP/1.1 200 OK"
+2025-10-28 12:03:21.985 | WARNING  | open_webui.utils.oauth:_process_picture_url:334 - Failed to fetch profile picture from https://graph.microsoft.com/v1.0/me/photo/$value
+2025-10-28 12:03:22.272 | INFO     | open_webui.models.auths:insert_new_auth:103 - insert_new_auth
+2025-10-28 12:03:22.740 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:03:23.453 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:03:33.201 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User sarah.aubort@epfl.ch searching in library LEX_FR
+2025-10-28 12:03:33.204 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:03:33.204 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:03:33.250 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:03:33.251 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:03:33.252 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:03:33.320 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:03:33.374 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:03:33.621 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:03:34.771 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:03:48.905 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:03:49.985 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:03:51.593 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User sarah.aubort@epfl.ch searching in library LEX_FR
+2025-10-28 12:03:51.595 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:03:51.596 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:03:51.644 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:03:51.645 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:03:51.645 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:03:51.696 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:03:51.700 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:03:51.910 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:03:57.694 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:04:25.333 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User sarah.aubort@epfl.ch searching in library LEX_FR
+2025-10-28 12:04:25.335 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:04:25.336 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:04:25.384 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:04:25.385 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:04:25.385 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:04:25.447 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:04:25.450 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:04:25.768 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:04:27.756 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:04:53.640 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:04:53.796 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:05:28.032 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 12:05:28.035 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:05:28.035 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:05:31.288 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:05:31.289 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:05:31.289 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:05:31.364 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:05:31.412 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:05:31.715 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:05:32.960 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:05:38.917 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:05:40.008 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:05:55.810 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 12:05:55.812 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:05:55.812 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:06:00.083 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User sarah.aubort@epfl.ch searching in library LEX_FR
+2025-10-28 12:06:00.085 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:06:00.086 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:06:00.357 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:06:00.358 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:06:00.358 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:06:00.427 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:06:00.456 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:06:00.638 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:06:02.578 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:06:04.171 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:06:04.173 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:06:04.173 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:06:04.252 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:06:04.255 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:06:04.667 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:06:07.175 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:06:08.699 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:06:38.234 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 12:06:38.236 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:06:38.236 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:06:42.361 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:06:42.363 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:06:42.363 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:06:42.439 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:06:42.481 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:06:42.813 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:06:44.438 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:08:13.262 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User sarah.aubort@epfl.ch searching in library LEX_FR
+2025-10-28 12:08:13.264 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:08:13.265 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:08:16.967 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:08:16.969 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:08:16.969 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:08:17.067 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:08:17.070 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:08:17.699 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:08:19.641 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:09:14.515 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User sarah.aubort@epfl.ch searching in library LEX_FR
+2025-10-28 12:09:14.517 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:09:14.517 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:09:18.441 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:09:18.443 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:09:18.443 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:09:18.522 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:09:18.526 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:09:19.081 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:09:21.288 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:31:11.808 | INFO     | open_webui.routers.auths:signin:471 - Signin request: pezeuy@gmail.com
+2025-10-28 12:31:11.808 | INFO     | open_webui.models.auths:authenticate_user:126 - authenticate_user: pezeuy@gmail.com
+2025-10-28 12:31:12.289 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:31:18.447 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User pezeuy@gmail.com searching in library LEX_FR
+2025-10-28 12:31:18.450 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:31:18.450 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:31:21.339 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:31:21.341 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:31:21.341 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:31:21.400 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:31:21.426 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:31:21.682 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:31:23.019 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:31:42.975 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:31:44.082 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:31:46.352 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+(EPFL) PS C:\Dev\openwebui-k8s> 

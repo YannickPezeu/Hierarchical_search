@@ -1,0 +1,997 @@
+2025-10-28 11:55:14.306 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completed HTTP/1.1" 200
+2025-10-28 11:55:14.727 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/0caf54ec-d025-4f92-bd54-ecb59d6601d3 HTTP/1.1" 200
+2025-10-28 11:55:14.800 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:55:14.825 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:55:40.226 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 11:55:50.987 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 11:56:00.678 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 400
+2025-10-28 11:56:00.697 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 11:56:00.700 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 11:56:00.700 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 11:56:04.332 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 11:56:04.334 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 11:56:04.334 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 11:56:04.338 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/libraries/LEX_FR/search HTTP/1.1" 200
+2025-10-28 11:56:04.416 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:56:04.417 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 11:56:04.449 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:56:04.451 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 11:56:04.873 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/0caf54ec-d025-4f92-bd54-ecb59d6601d3 HTTP/1.1" 200
+2025-10-28 11:56:04.940 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:56:04.971 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:56:05.060 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:56:05.064 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 200
+2025-10-28 11:56:05.090 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:56:05.140 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:56:07.001 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:56:09.852 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 11:56:16.802 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completed HTTP/1.1" 200
+2025-10-28 11:56:17.643 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/0caf54ec-d025-4f92-bd54-ecb59d6601d3 HTTP/1.1" 200
+2025-10-28 11:56:17.728 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:56:17.750 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:56:24.737 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:56:25.046 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/models HTTP/1.1" 200
+2025-10-28 11:56:28.869 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200
+2025-10-28 11:56:32.945 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 400
+2025-10-28 11:56:32.977 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 11:56:32.980 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 11:56:32.980 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 11:56:33.025 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 11:56:33.027 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 11:56:33.027 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 11:56:33.031 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/libraries/LEX_FR/search HTTP/1.1" 200
+2025-10-28 11:56:33.071 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:56:33.077 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 11:56:33.104 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/new HTTP/1.1" 200
+2025-10-28 11:56:33.111 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:56:33.113 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 11:56:33.138 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:56:33.161 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:56:33.190 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/afa4c28d-1c55-4431-975b-ea77b5305b91 HTTP/1.1" 200
+2025-10-28 11:56:33.212 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:56:33.234 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:56:33.262 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:56:33.265 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 200
+2025-10-28 11:56:33.332 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:56:33.368 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:56:34.472 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:56:38.662 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:56:38.690 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completed HTTP/1.1" 200
+2025-10-28 11:56:38.788 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/afa4c28d-1c55-4431-975b-ea77b5305b91 HTTP/1.1" 200
+2025-10-28 11:56:38.808 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:56:38.837 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:56:39.633 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:56:39.654 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:56:40.209 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 11:56:41.652 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/afa4c28d-1c55-4431-975b-ea77b5305b91 HTTP/1.1" 200
+2025-10-28 11:56:41.680 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/all/tags HTTP/1.1" 200
+2025-10-28 11:56:45.788 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200
+2025-10-28 11:56:49.485 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 400
+2025-10-28 11:56:49.515 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 11:56:49.517 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 11:56:49.518 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 11:56:51.003 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 11:56:53.869 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 11:56:53.871 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 11:56:53.871 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 11:56:53.875 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/libraries/LEX_FR/search HTTP/1.1" 200
+2025-10-28 11:56:53.938 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:56:53.945 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 11:56:53.973 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/new HTTP/1.1" 200
+2025-10-28 11:56:53.980 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:56:53.982 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 11:56:54.025 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:56:54.042 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:56:54.074 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/eabf9eaf-e083-4a21-9cc1-b2fb186e8541 HTTP/1.1" 200
+2025-10-28 11:56:54.111 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:56:54.142 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:56:54.174 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:56:54.177 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 200
+2025-10-28 11:56:54.251 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:56:54.277 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:56:56.053 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:57:04.466 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 11:57:04.468 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 11:57:10.767 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 11:57:19.247 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:57:19.336 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completed HTTP/1.1" 200
+2025-10-28 11:57:19.471 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/eabf9eaf-e083-4a21-9cc1-b2fb186e8541 HTTP/1.1" 200
+2025-10-28 11:57:19.503 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:57:19.532 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:57:20.310 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:57:20.341 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:57:22.039 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/eabf9eaf-e083-4a21-9cc1-b2fb186e8541 HTTP/1.1" 200
+2025-10-28 11:57:22.076 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/all/tags HTTP/1.1" 200
+2025-10-28 11:57:40.470 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 11:57:51.983 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 11:58:04.456 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 11:58:05.321 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200
+2025-10-28 11:58:10.792 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 400
+2025-10-28 11:58:10.837 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 11:58:10.839 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 11:58:10.839 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 11:58:11.286 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 11:58:14.389 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 11:58:14.391 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 11:58:14.392 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 11:58:14.395 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/libraries/LEX_FR/search HTTP/1.1" 200
+2025-10-28 11:58:14.437 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:58:14.442 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 11:58:14.470 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:58:14.471 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/new HTTP/1.1" 200
+2025-10-28 11:58:14.473 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 11:58:14.536 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:58:14.559 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:58:14.588 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/2c698059-cfbe-4eac-8901-24f9e2937873 HTTP/1.1" 200
+2025-10-28 11:58:14.611 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:58:14.634 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:58:14.658 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:58:14.661 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 200
+2025-10-28 11:58:14.685 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:58:14.726 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:58:15.807 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:58:25.842 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:58:25.876 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completed HTTP/1.1" 200
+2025-10-28 11:58:26.020 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/2c698059-cfbe-4eac-8901-24f9e2937873 HTTP/1.1" 200
+2025-10-28 11:58:26.047 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:58:26.077 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:58:26.816 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:58:26.835 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:58:27.030 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200
+2025-10-28 11:58:30.626 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 400
+2025-10-28 11:58:30.650 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 11:58:30.653 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 11:58:30.653 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 11:58:35.573 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 11:58:35.575 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 11:58:35.575 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 11:58:35.579 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/libraries/LEX_FR/search HTTP/1.1" 200
+2025-10-28 11:58:35.638 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:58:35.644 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 11:58:35.671 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/new HTTP/1.1" 200
+2025-10-28 11:58:35.678 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 11:58:35.680 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 11:58:35.727 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:58:35.748 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:58:35.779 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/d11a77b5-0a94-450f-9cd0-143ea6dabd43 HTTP/1.1" 200
+2025-10-28 11:58:35.804 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:58:35.826 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:58:35.858 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:58:35.862 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 200
+2025-10-28 11:58:35.883 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:58:35.934 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:58:37.517 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:58:40.482 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 11:58:45.171 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 11:58:45.255 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completed HTTP/1.1" 200
+2025-10-28 11:58:45.413 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/d11a77b5-0a94-450f-9cd0-143ea6dabd43 HTTP/1.1" 200
+2025-10-28 11:58:45.453 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:58:45.484 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:58:46.088 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 11:58:46.108 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 11:58:47.245 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/d11a77b5-0a94-450f-9cd0-143ea6dabd43 HTTP/1.1" 200
+2025-10-28 11:58:47.301 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/all/tags HTTP/1.1" 200
+2025-10-28 11:58:51.980 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 11:59:04.457 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 11:59:11.999 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 11:59:40.663 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 11:59:51.992 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:00:04.459 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:00:12.595 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:00:17.707 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /static/apple-touch-icon.png HTTP/1.1" 200
+2025-10-28 12:00:20.127 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/config HTTP/1.1" 200
+2025-10-28 12:00:20.128 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /manifest.json HTTP/1.1" 200
+2025-10-28 12:00:20.154 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:00:20.156 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:00:20.192 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/config HTTP/1.1" 200
+2025-10-28 12:00:20.219 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/archived?page=1&order_by=updated_at&direction=desc HTTP/1.1" 200
+2025-10-28 12:00:20.246 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/changelog HTTP/1.1" 200
+2025-10-28 12:00:20.252 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/channels/ HTTP/1.1" 200
+2025-10-28 12:00:20.257 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:00:20.257 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:00:20.271 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200
+2025-10-28 12:00:20.275 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/channels/ HTTP/1.1" 200
+2025-10-28 12:00:20.287 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/all/tags HTTP/1.1" 200
+2025-10-28 12:00:20.295 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:00:20.311 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/all/tags HTTP/1.1" 200
+2025-10-28 12:00:20.312 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/pinned HTTP/1.1" 200
+2025-10-28 12:00:20.623 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/pinned HTTP/1.1" 200
+2025-10-28 12:00:20.627 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/models HTTP/1.1" 200
+2025-10-28 12:00:20.628 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:00:20.629 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:00:20.687 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:00:20.694 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/configs/banners HTTP/1.1" 200
+2025-10-28 12:00:20.700 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:00:20.705 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:00:20.720 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/tools/ HTTP/1.1" 200
+2025-10-28 12:00:20.726 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:00:20.782 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /ollama/api/version HTTP/1.1" 200
+2025-10-28 12:00:20.855 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200
+2025-10-28 12:00:28.118 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 400
+2025-10-28 12:00:28.141 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 12:00:28.143 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:00:28.143 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:00:32.405 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:00:32.406 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:00:32.406 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:00:32.411 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/libraries/LEX_FR/search HTTP/1.1" 200
+2025-10-28 12:00:32.471 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:00:32.477 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:00:32.501 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/new HTTP/1.1" 200
+2025-10-28 12:00:32.510 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:00:32.512 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:00:32.564 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:00:32.585 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:00:32.612 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/0d2f03b6-43cf-4584-8b8b-77fba3d2f5b1 HTTP/1.1" 200
+2025-10-28 12:00:32.642 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:00:32.665 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:00:32.701 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:00:32.704 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 200
+2025-10-28 12:00:32.773 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:00:32.802 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:00:34.119 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:00:40.662 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:00:47.192 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200
+2025-10-28 12:00:53.210 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 400
+2025-10-28 12:00:53.232 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 12:00:53.235 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:00:53.235 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:00:57.680 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:00:57.682 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:00:57.682 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:00:57.686 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/libraries/LEX_FR/search HTTP/1.1" 200
+2025-10-28 12:00:57.741 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:00:57.748 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:00:57.773 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/new HTTP/1.1" 200
+2025-10-28 12:00:57.780 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:00:57.781 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:00:57.810 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:00:57.829 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:00:57.860 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/e836c15f-a4e3-4230-b602-265ba461d187 HTTP/1.1" 200
+2025-10-28 12:00:57.889 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:00:57.908 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:00:57.942 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:00:57.947 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 200
+2025-10-28 12:00:57.968 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:00:58.028 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:00:59.392 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:01:03.437 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:01:03.513 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /audio/notification.mp3 HTTP/1.1" 206
+2025-10-28 12:01:03.804 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /static/apple-touch-icon.png HTTP/1.1" 200
+2025-10-28 12:01:04.464 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:01:04.475 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:01:04.680 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:01:04.751 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:01:04.770 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:01:05.774 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200
+2025-10-28 12:01:06.483 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/all/tags HTTP/1.1" 200
+2025-10-28 12:01:09.176 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:01:10.045 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 400
+2025-10-28 12:01:10.069 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 12:01:10.072 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:01:10.072 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:01:10.191 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:01:10.236 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:01:11.934 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/all/tags HTTP/1.1" 200
+2025-10-28 12:01:13.056 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:01:13.908 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:01:13.910 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:01:13.910 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:01:13.914 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/libraries/LEX_FR/search HTTP/1.1" 200
+2025-10-28 12:01:14.004 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:01:14.005 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:01:14.035 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/new HTTP/1.1" 200
+2025-10-28 12:01:14.042 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:01:14.044 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:01:14.082 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:01:14.103 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:01:14.145 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/808273d9-0f1d-41cb-a148-9e82756f99dd HTTP/1.1" 200
+2025-10-28 12:01:14.191 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:01:14.230 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:01:14.269 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:01:14.273 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 200
+2025-10-28 12:01:14.296 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:01:14.352 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:01:15.830 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:01:19.724 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:01:22.396 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:01:22.430 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completed HTTP/1.1" 200
+2025-10-28 12:01:22.572 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/808273d9-0f1d-41cb-a148-9e82756f99dd HTTP/1.1" 200
+2025-10-28 12:01:22.600 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:01:22.630 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:01:23.252 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:01:23.279 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:01:24.796 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/808273d9-0f1d-41cb-a148-9e82756f99dd HTTP/1.1" 200
+2025-10-28 12:01:24.838 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/all/tags HTTP/1.1" 200
+2025-10-28 12:01:40.867 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:02:04.478 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:02:13.582 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:02:41.344 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:03:00.271 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET / HTTP/1.1" 200
+2025-10-28 12:03:00.360 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /static/custom.css HTTP/1.1" 200
+2025-10-28 12:03:00.361 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/entry/start.Yx7fCUBK.js HTTP/1.1" 200
+2025-10-28 12:03:00.361 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/b8ym_9Yp.js HTTP/1.1" 200
+2025-10-28 12:03:00.361 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /static/loader.js HTTP/1.1" 200
+2025-10-28 12:03:00.364 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/entry/app.CAHBSPaH.js HTTP/1.1" 200
+2025-10-28 12:03:00.366 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/GtRrcNrO.js HTTP/1.1" 200
+2025-10-28 12:03:00.366 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/C1FmrZbK.js HTTP/1.1" 200
+2025-10-28 12:03:00.368 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/IHki7fMi.js HTTP/1.1" 200
+2025-10-28 12:03:00.388 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /static/splash.png HTTP/1.1" 200
+2025-10-28 12:03:00.467 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/nodes/0.D7zLQ8pG.js HTTP/1.1" 200
+2025-10-28 12:03:00.500 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/D0QH3NT1.js HTTP/1.1" 200
+2025-10-28 12:03:00.501 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/TjCxX7sJ.js HTTP/1.1" 200
+2025-10-28 12:03:00.502 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/Caq1WJ4_.js HTTP/1.1" 200
+2025-10-28 12:03:00.558 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/aJwaArNi.js HTTP/1.1" 200
+2025-10-28 12:03:00.562 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/574D7BjZ.js HTTP/1.1" 200
+2025-10-28 12:03:00.564 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/yErFKKUf.js HTTP/1.1" 200
+2025-10-28 12:03:00.579 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/assets/Toaster.DQwrSZtH.css HTTP/1.1" 200
+2025-10-28 12:03:00.580 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/Ddi_ALG6.js HTTP/1.1" 200
+2025-10-28 12:03:00.581 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/CgU5AtxT.js HTTP/1.1" 200
+2025-10-28 12:03:00.582 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/CeOCZyG6.js HTTP/1.1" 200
+2025-10-28 12:03:00.583 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/By45Qu0H.js HTTP/1.1" 200
+2025-10-28 12:03:00.600 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/BC4znSyB.js HTTP/1.1" 200
+2025-10-28 12:03:00.603 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/D7VliHG9.js HTTP/1.1" 200
+2025-10-28 12:03:00.616 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/Dg9s47F-.js HTTP/1.1" 200
+2025-10-28 12:03:00.625 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DRfjxnfr.js HTTP/1.1" 200
+2025-10-28 12:03:00.631 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/BELChdV_.js HTTP/1.1" 200
+2025-10-28 12:03:00.641 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/aGzT-_H7.js HTTP/1.1" 200
+2025-10-28 12:03:00.647 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/QjJsDpFa.js HTTP/1.1" 200
+2025-10-28 12:03:00.647 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/BT28bLwl.js HTTP/1.1" 200
+2025-10-28 12:03:00.647 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/dUKeKaur.js HTTP/1.1" 200
+2025-10-28 12:03:00.655 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/yyAxATa1.js HTTP/1.1" 200
+2025-10-28 12:03:00.665 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/assets/0.CAnGloez.css HTTP/1.1" 200
+2025-10-28 12:03:00.687 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/nodes/2.BFjgN5xU.js HTTP/1.1" 200
+2025-10-28 12:03:00.687 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/nodes/1.CrhEond7.js HTTP/1.1" 200
+2025-10-28 12:03:00.694 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DsSS4D_b.js HTTP/1.1" 200
+2025-10-28 12:03:00.697 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DHw4DLaL.js HTTP/1.1" 200
+2025-10-28 12:03:00.700 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DZM4oewN.js HTTP/1.1" 200
+2025-10-28 12:03:00.721 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/BW3jWjIe.js HTTP/1.1" 200
+2025-10-28 12:03:00.730 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/Bdd2VpUO.js HTTP/1.1" 200
+2025-10-28 12:03:00.731 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/Ccw7PXcW.js HTTP/1.1" 200
+2025-10-28 12:03:00.737 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/CbutUsQ8.js HTTP/1.1" 200
+2025-10-28 12:03:00.743 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/C5n6vWL-.js HTTP/1.1" 200
+2025-10-28 12:03:00.749 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/CAY4N-LY.js HTTP/1.1" 200
+2025-10-28 12:03:00.754 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/BZZdMtt3.js HTTP/1.1" 200
+2025-10-28 12:03:00.765 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/Vcq4gwWv.js HTTP/1.1" 200
+2025-10-28 12:03:00.773 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/hcO3Sux-.js HTTP/1.1" 200
+2025-10-28 12:03:00.780 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/v-pMpWlf.js HTTP/1.1" 200
+2025-10-28 12:03:00.785 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/haKJ1c00.js HTTP/1.1" 200
+2025-10-28 12:03:00.804 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/BqjzczqP.js HTTP/1.1" 200
+2025-10-28 12:03:00.813 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DOVZi7Gf.js HTTP/1.1" 200
+2025-10-28 12:03:00.813 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/B6lghryw.js HTTP/1.1" 200
+2025-10-28 12:03:00.813 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/assets/Collapsible.DZAVxvaL.css HTTP/1.1" 200
+2025-10-28 12:03:00.814 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/Bk_AqAuf.js HTTP/1.1" 200
+2025-10-28 12:03:00.819 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/CqE3PmeB.js HTTP/1.1" 200
+2025-10-28 12:03:00.842 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/CNEiduZf.js HTTP/1.1" 200
+2025-10-28 12:03:00.842 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/B_xCX6By.js HTTP/1.1" 200
+2025-10-28 12:03:00.842 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/assets/Modal.CyLKLEmt.css HTTP/1.1" 200
+2025-10-28 12:03:00.848 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/BF9Lron5.js HTTP/1.1" 200
+2025-10-28 12:03:00.854 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/CA9koleu.js HTTP/1.1" 200
+2025-10-28 12:03:00.867 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/Crqb53Gp.js HTTP/1.1" 200
+2025-10-28 12:03:00.871 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DzdPeBFx.js HTTP/1.1" 200
+2025-10-28 12:03:00.877 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/BwwDZvwB.js HTTP/1.1" 200
+2025-10-28 12:03:00.896 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/BQiYwSar.js HTTP/1.1" 200
+2025-10-28 12:03:00.896 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/assets/ConfirmDialog.kaSBQ3kP.css HTTP/1.1" 200
+2025-10-28 12:03:00.896 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/Dqb_S-UG.js HTTP/1.1" 200
+2025-10-28 12:03:00.901 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/BZX3uuDj.js HTTP/1.1" 200
+2025-10-28 12:03:00.904 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DCzefKmV.js HTTP/1.1" 200
+2025-10-28 12:03:00.905 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/CoGdqets.js HTTP/1.1" 200
+2025-10-28 12:03:00.909 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/tfzRsdFs.js HTTP/1.1" 200
+2025-10-28 12:03:00.921 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/Dz5UHw5s.js HTTP/1.1" 200
+2025-10-28 12:03:00.926 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/Bl7pMpym.js HTTP/1.1" 200
+2025-10-28 12:03:00.926 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/XWxYCSLi.js HTTP/1.1" 200
+2025-10-28 12:03:00.931 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/C5k5RUn9.js HTTP/1.1" 200
+2025-10-28 12:03:00.936 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/CQU6-_gD.js HTTP/1.1" 200
+2025-10-28 12:03:00.937 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/CSFRm9Kx.js HTTP/1.1" 200
+2025-10-28 12:03:00.942 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/B_2rqXCK.js HTTP/1.1" 200
+2025-10-28 12:03:00.946 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/Dkkd0SKt.js HTTP/1.1" 200
+2025-10-28 12:03:00.947 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DxJnD4SP.js HTTP/1.1" 200
+2025-10-28 12:03:00.953 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/C1ExPToD.js HTTP/1.1" 200
+2025-10-28 12:03:00.953 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/CQ6Yuucl.js HTTP/1.1" 200
+2025-10-28 12:03:00.953 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/Bc9Zu5mu.js HTTP/1.1" 200
+2025-10-28 12:03:00.958 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/Ch1WBRTM.js HTTP/1.1" 200
+2025-10-28 12:03:00.962 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/yCOTO0Xz.js HTTP/1.1" 200
+2025-10-28 12:03:00.963 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/uiAG8oA-.js HTTP/1.1" 200
+2025-10-28 12:03:00.967 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/BMSd1x3i.js HTTP/1.1" 200
+2025-10-28 12:03:00.967 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DxVfF-DJ.js HTTP/1.1" 200
+2025-10-28 12:03:00.972 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DVTfMMj_.js HTTP/1.1" 200
+2025-10-28 12:03:00.972 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/CMPClbSw.js HTTP/1.1" 200
+2025-10-28 12:03:00.977 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/BmKJxSnN.js HTTP/1.1" 200
+2025-10-28 12:03:00.981 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/CXRWsRS6.js HTTP/1.1" 200
+2025-10-28 12:03:00.985 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/ovqzsMum.js HTTP/1.1" 200
+2025-10-28 12:03:00.985 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/BYE11Iew.js HTTP/1.1" 200
+2025-10-28 12:03:00.993 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/D-iXZm15.js HTTP/1.1" 200
+2025-10-28 12:03:00.993 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/CNTZx2iI.js HTTP/1.1" 200
+2025-10-28 12:03:00.993 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/C83syoBY.js HTTP/1.1" 200
+2025-10-28 12:03:00.997 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/assets/Messages.Bbuu_qma.css HTTP/1.1" 200
+2025-10-28 12:03:00.997 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/assets/Skeleton.Cr25vAl_.css HTTP/1.1" 200
+2025-10-28 12:03:01.001 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DikawCoR.js HTTP/1.1" 200
+2025-10-28 12:03:01.005 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/CGLhauRJ.js HTTP/1.1" 200
+2025-10-28 12:03:01.009 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DKmmiw_x.js HTTP/1.1" 200
+2025-10-28 12:03:01.012 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/i8IuCWOI.js HTTP/1.1" 200
+2025-10-28 12:03:01.016 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DSrbgbDY.js HTTP/1.1" 200
+2025-10-28 12:03:01.019 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/D-dOh8aS.js HTTP/1.1" 200
+2025-10-28 12:03:01.026 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/BM1j8xjK.js HTTP/1.1" 200
+2025-10-28 12:03:01.032 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DHRjRVap.js HTTP/1.1" 200
+2025-10-28 12:03:01.034 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/Dri2n2DS.js HTTP/1.1" 200
+2025-10-28 12:03:01.036 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/assets/2.DILJNhWK.css HTTP/1.1" 200
+2025-10-28 12:03:01.039 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/BqDUrqBf.js HTTP/1.1" 200
+2025-10-28 12:03:01.041 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/nodes/8.BOyQCKoL.js HTTP/1.1" 200
+2025-10-28 12:03:01.044 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DOwAvKtg.js HTTP/1.1" 200
+2025-10-28 12:03:01.046 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/E-grfGtE.js HTTP/1.1" 200
+2025-10-28 12:03:01.051 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/wZeSHq29.js HTTP/1.1" 200
+2025-10-28 12:03:01.051 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/D5MNat4b.js HTTP/1.1" 200
+2025-10-28 12:03:01.059 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/assets/MapSelector.CIGW-MKW.css HTTP/1.1" 200
+2025-10-28 12:03:01.063 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/Ha70qoil.js HTTP/1.1" 200
+2025-10-28 12:03:01.065 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DdMpQMBi.js HTTP/1.1" 200
+2025-10-28 12:03:01.066 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/B9_kdG4x.js HTTP/1.1" 200
+2025-10-28 12:03:01.069 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/assets/Drawer.Bz8t_RYw.css HTTP/1.1" 200
+2025-10-28 12:03:01.071 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DekYPYtA.js HTTP/1.1" 200
+2025-10-28 12:03:01.071 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/BYvfAWr3.js HTTP/1.1" 200
+2025-10-28 12:03:01.071 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/Qf6Lbf6T.js HTTP/1.1" 200
+2025-10-28 12:03:01.073 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/MoakZwgl.js HTTP/1.1" 200
+2025-10-28 12:03:01.074 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/BBgnxd28.js HTTP/1.1" 200
+2025-10-28 12:03:01.076 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/LvmPT5aW.js HTTP/1.1" 200
+2025-10-28 12:03:01.077 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/C4n25mhA.js HTTP/1.1" 200
+2025-10-28 12:03:01.078 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/uxvNpnPA.js HTTP/1.1" 200
+2025-10-28 12:03:01.079 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/assets/Chat.Cw0CQs92.css HTTP/1.1" 200
+2025-10-28 12:03:01.079 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/-odJlceL.js HTTP/1.1" 200
+2025-10-28 12:03:01.274 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /static/apple-touch-icon.png HTTP/1.1" 200
+2025-10-28 12:03:01.276 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /static/favicon.svg HTTP/1.1" 200
+2025-10-28 12:03:01.527 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/config HTTP/1.1" 200
+2025-10-28 12:03:01.548 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/z2zm9mqq.js HTTP/1.1" 200
+2025-10-28 12:03:01.550 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DkuMLBaX.js HTTP/1.1" 200
+2025-10-28 12:03:01.578 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/chunks/DvcHRM1r.js HTTP/1.1" 200
+2025-10-28 12:03:01.585 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/nodes/42.BfLUaJpn.js HTTP/1.1" 200
+2025-10-28 12:03:01.586 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/assets/42.DUP86x5U.css HTTP/1.1" 200
+2025-10-28 12:03:01.648 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /static/favicon.png HTTP/1.1" 200
+2025-10-28 12:03:01.649 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /assets/fonts/Archivo-Variable.ttf HTTP/1.1" 200
+2025-10-28 12:03:01.651 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /assets/fonts/Inter-Variable.ttf HTTP/1.1" 200
+2025-10-28 12:03:04.458 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:03:13.385 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /assets/fonts/Vazirmatn-Variable.ttf HTTP/1.1" 200
+2025-10-28 12:03:14.089 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:03:14.538 | INFO     | open_webui.routers.auths:signin:471 - Signin request: sarah.aubort@epfl.ch
+2025-10-28 12:03:14.538 | INFO     | open_webui.models.auths:authenticate_user:126 - authenticate_user: sarah.aubort@epfl.ch
+2025-10-28 12:03:14.542 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/auths/signin HTTP/1.1" 400
+2025-10-28 12:03:20.858 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /oauth/microsoft/login HTTP/1.1" 302
+2025-10-28 12:03:21.736 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST https://login.microsoftonline.com/f6c2556a-c4fb-4ab1-a2c7-9e220df11c43/oauth2/v2.0/token "HTTP/1.1 200 OK"
+2025-10-28 12:03:21.895 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: GET https://graph.microsoft.com/oidc/userinfo "HTTP/1.1 200 OK"
+2025-10-28 12:03:21.985 | WARNING  | open_webui.utils.oauth:_process_picture_url:334 - Failed to fetch profile picture from https://graph.microsoft.com/v1.0/me/photo/$value
+2025-10-28 12:03:22.272 | INFO     | open_webui.models.auths:insert_new_auth:103 - insert_new_auth
+2025-10-28 12:03:22.288 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /oauth/microsoft/callback?code=1.AQwAalXC9vvEsUqix54iDfEcQ2niR2_5pWpIuapaO1VYfJ3dAMAMAA.AgABBAIAAABlMNzVhAPUTrARzfQjWPtKAwDs_wUA9P9rQsNvQpqls6GkinWCO7pC-ncqlAStzzULbehHN3B_0g13BalvQjPfIAFCm9a5jUdyXydeZ-iTkGC7skMLxFggwm4sW0ReHx2teXjHPJg9_AlVB0t3ffqr8CFtaMSNWTRU9qXn9HX1-86X8H8Emigy0EA0BgeluRhuQKdg-SEknWzuJHjm4XEw2eKUc8FGe5yqytBQ4dceStiS9kHngw2KOTiVA4TbUP7gVTgIhbSzTQJtRE4eYvgaPJJY3KqIPlUG90Qp1yjeIBOo9YEx5XXeErqqE5Zxg9oLT26nyucnNQZiYCcNnqb7LfLCdnOF39mw9HN4JX8-aDC8PR_-aGdwjl-kEtZ_wMJYJmU4zidSVmvNJtdQ3EL5yeLP73g2b5lejs-kX5kKR38u1KVatFarHadr8FJQa0J9t0PE_HinReMrtKm4QDcFZXEJS_ZUiNVMgTx8Rkf6boOHAAoC3Y-7jxnNIxWQX6UQiF9Qp9mwyMYr5sJe_qZaEncLHesDmdYVHH-TtBC_GPFki7x-01FoNme2SZih8klOyyb0Y5rMyW8G3pPZCfzOEq4es_jRr8IdbvOtFMjDAApmzQ-HfrgF55Xex791Jcunul-R6VjXAv8r9r6cqT-cYTNi3grJidxy8wzVge85okhAutVRyJrJrovkOZIgIbaQg9u2h014jLzQYzdNRRe2IMGwZlyqA9owvs-4IzUxCJFuD4XlCXlsh9QwFjMKxcAlw2TMPszBFS7mlsUMsbEvzFuZnAW1-4ne1ymQXndFGLAYcGDiT359DltH2b5HnUvb2R7MxbiPwTEKi5s&state=ZKVMsUqjI5wolUTfhaq2ji7KEtWYHr&session_state=4b0d98f4-63aa-487f-ba7c-da5942a907ac HTTP/1.1" 307
+2025-10-28 12:03:22.341 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /auth HTTP/1.1" 200
+2025-10-28 12:03:22.688 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/config HTTP/1.1" 200
+2025-10-28 12:03:22.740 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:03:22.741 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:03:22.808 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/config HTTP/1.1" 200
+2025-10-28 12:03:23.376 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/changelog HTTP/1.1" 200
+2025-10-28 12:03:23.398 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/archived?page=1&order_by=updated_at&direction=desc HTTP/1.1" 200
+2025-10-28 12:03:23.400 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /user.png HTTP/1.1" 200
+2025-10-28 12:03:23.408 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/channels/ HTTP/1.1" 200
+2025-10-28 12:03:23.415 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:03:23.416 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:03:23.421 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200
+2025-10-28 12:03:23.435 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/channels/ HTTP/1.1" 200
+2025-10-28 12:03:23.444 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/all/tags HTTP/1.1" 200
+2025-10-28 12:03:23.453 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:03:23.462 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/all/tags HTTP/1.1" 200
+2025-10-28 12:03:23.473 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/pinned HTTP/1.1" 200
+2025-10-28 12:03:23.485 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/pinned HTTP/1.1" 200
+2025-10-28 12:03:23.753 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/models HTTP/1.1" 200
+2025-10-28 12:03:23.763 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:03:23.764 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:03:23.770 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:03:23.772 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:03:23.825 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/configs/banners HTTP/1.1" 200
+2025-10-28 12:03:23.831 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:03:23.832 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:03:23.873 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/tools/ HTTP/1.1" 200
+2025-10-28 12:03:23.912 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /ollama/api/version HTTP/1.1" 200
+2025-10-28 12:03:23.967 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200
+2025-10-28 12:03:33.159 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 400
+2025-10-28 12:03:33.201 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User sarah.aubort@epfl.ch searching in library LEX_FR
+2025-10-28 12:03:33.204 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:03:33.204 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:03:33.250 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:03:33.251 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:03:33.252 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:03:33.255 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/libraries/LEX_FR/search HTTP/1.1" 200
+2025-10-28 12:03:33.320 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:03:33.321 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:03:33.374 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:03:33.375 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:03:33.392 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/new HTTP/1.1" 200
+2025-10-28 12:03:33.451 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:03:33.487 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:03:33.529 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/66e1e915-115f-477b-b557-f62674c6620c HTTP/1.1" 200
+2025-10-28 12:03:33.556 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:03:33.592 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:03:33.621 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:03:33.625 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 200
+2025-10-28 12:03:33.691 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:03:33.718 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:03:34.771 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:03:41.352 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:03:48.905 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:03:48.979 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completed HTTP/1.1" 200
+2025-10-28 12:03:49.080 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/66e1e915-115f-477b-b557-f62674c6620c HTTP/1.1" 200
+2025-10-28 12:03:49.114 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:03:49.138 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:03:49.985 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:03:50.049 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:03:50.082 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:03:51.554 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/66e1e915-115f-477b-b557-f62674c6620c HTTP/1.1" 200
+2025-10-28 12:03:51.568 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 400
+2025-10-28 12:03:51.589 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/all/tags HTTP/1.1" 200
+2025-10-28 12:03:51.593 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User sarah.aubort@epfl.ch searching in library LEX_FR
+2025-10-28 12:03:51.595 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:03:51.596 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:03:51.644 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:03:51.645 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:03:51.645 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:03:51.649 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/libraries/LEX_FR/search HTTP/1.1" 200
+2025-10-28 12:03:51.696 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:03:51.700 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:03:51.702 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:03:51.703 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:03:51.817 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/66e1e915-115f-477b-b557-f62674c6620c HTTP/1.1" 200
+2025-10-28 12:03:51.845 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:03:51.872 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:03:51.910 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:03:51.913 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 200
+2025-10-28 12:03:51.939 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:03:51.984 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:03:57.694 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:04:04.469 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:04:04.503 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:04:14.565 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:04:19.651 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completed HTTP/1.1" 200
+2025-10-28 12:04:19.979 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/66e1e915-115f-477b-b557-f62674c6620c HTTP/1.1" 200
+2025-10-28 12:04:20.050 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:04:20.097 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:04:22.541 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:04:25.300 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 400
+2025-10-28 12:04:25.333 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User sarah.aubort@epfl.ch searching in library LEX_FR
+2025-10-28 12:04:25.335 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:04:25.336 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:04:25.384 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:04:25.385 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:04:25.385 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:04:25.389 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/libraries/LEX_FR/search HTTP/1.1" 200
+2025-10-28 12:04:25.447 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:04:25.450 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:04:25.452 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:04:25.453 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:04:25.651 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/66e1e915-115f-477b-b557-f62674c6620c HTTP/1.1" 200
+2025-10-28 12:04:25.695 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:04:25.719 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:04:25.768 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:04:25.771 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 200
+2025-10-28 12:04:25.838 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:04:25.864 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:04:27.756 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:04:41.359 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:04:45.709 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completed HTTP/1.1" 200
+2025-10-28 12:04:45.938 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/66e1e915-115f-477b-b557-f62674c6620c HTTP/1.1" 200
+2025-10-28 12:04:45.980 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:04:46.019 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:04:53.547 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /manifest.json HTTP/1.1" 200
+2025-10-28 12:04:53.610 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/config HTTP/1.1" 200
+2025-10-28 12:04:53.640 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:04:53.642 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:04:53.701 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/config HTTP/1.1" 200
+2025-10-28 12:04:53.727 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/archived?page=1&order_by=updated_at&direction=desc HTTP/1.1" 200
+2025-10-28 12:04:53.743 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/changelog HTTP/1.1" 200
+2025-10-28 12:04:53.752 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:04:53.752 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/channels/ HTTP/1.1" 200
+2025-10-28 12:04:53.755 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:04:53.771 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200
+2025-10-28 12:04:53.775 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/channels/ HTTP/1.1" 200
+2025-10-28 12:04:53.781 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/all/tags HTTP/1.1" 200
+2025-10-28 12:04:53.796 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:04:53.804 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/all/tags HTTP/1.1" 200
+2025-10-28 12:04:53.807 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/pinned HTTP/1.1" 200
+2025-10-28 12:04:54.104 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/models HTTP/1.1" 200
+2025-10-28 12:04:54.104 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/pinned HTTP/1.1" 200
+2025-10-28 12:04:54.111 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:04:54.113 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:04:54.167 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/configs/banners HTTP/1.1" 200
+2025-10-28 12:04:54.173 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:04:54.175 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:04:54.192 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:04:54.199 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/tools/ HTTP/1.1" 200
+2025-10-28 12:04:54.208 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:04:54.258 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /ollama/api/version HTTP/1.1" 200
+2025-10-28 12:04:54.339 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200
+2025-10-28 12:05:15.264 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:05:22.562 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:05:27.999 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 400
+2025-10-28 12:05:28.032 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 12:05:28.035 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:05:28.035 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:05:31.288 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:05:31.289 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:05:31.289 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:05:31.293 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/libraries/LEX_FR/search HTTP/1.1" 200
+2025-10-28 12:05:31.364 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:05:31.371 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:05:31.399 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/new HTTP/1.1" 200
+2025-10-28 12:05:31.412 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:05:31.413 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:05:31.469 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:05:31.517 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:05:31.570 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/82f6e148-13a4-4c04-bdfc-addcbecef1ee HTTP/1.1" 200
+2025-10-28 12:05:31.620 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:05:31.681 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:05:31.715 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:05:31.719 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 200
+2025-10-28 12:05:31.742 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:05:31.795 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:05:32.960 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:05:38.917 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:05:38.996 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completed HTTP/1.1" 200
+2025-10-28 12:05:39.098 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/82f6e148-13a4-4c04-bdfc-addcbecef1ee HTTP/1.1" 200
+2025-10-28 12:05:39.154 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:05:39.186 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:05:40.008 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:05:40.023 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:05:40.086 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:05:41.366 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:05:53.218 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:05:55.766 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 400
+2025-10-28 12:05:55.810 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 12:05:55.812 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:05:55.812 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:06:00.056 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 400
+2025-10-28 12:06:00.083 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User sarah.aubort@epfl.ch searching in library LEX_FR
+2025-10-28 12:06:00.085 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:06:00.086 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:06:00.357 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:06:00.358 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:06:00.358 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:06:00.362 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/libraries/LEX_FR/search HTTP/1.1" 200
+2025-10-28 12:06:00.427 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:06:00.429 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:06:00.456 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:06:00.458 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:06:00.534 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/82f6e148-13a4-4c04-bdfc-addcbecef1ee HTTP/1.1" 200
+2025-10-28 12:06:00.563 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:06:00.599 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:06:00.638 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:06:00.641 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 200
+2025-10-28 12:06:00.661 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:06:00.723 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:06:02.578 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:06:04.171 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:06:04.173 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:06:04.173 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:06:04.177 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/libraries/LEX_FR/search HTTP/1.1" 200
+2025-10-28 12:06:04.252 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:06:04.255 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:06:04.256 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:06:04.257 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:06:04.516 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/66e1e915-115f-477b-b557-f62674c6620c HTTP/1.1" 200
+2025-10-28 12:06:04.519 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:06:04.521 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:06:04.577 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:06:04.617 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:06:04.667 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:06:04.670 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 200
+2025-10-28 12:06:04.732 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:06:04.757 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:06:07.175 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:06:08.699 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:06:08.985 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/models HTTP/1.1" 200
+2025-10-28 12:06:15.840 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:06:17.798 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completed HTTP/1.1" 200
+2025-10-28 12:06:17.968 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/82f6e148-13a4-4c04-bdfc-addcbecef1ee HTTP/1.1" 200
+2025-10-28 12:06:18.007 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:06:18.046 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:06:22.558 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:06:27.066 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completed HTTP/1.1" 200
+2025-10-28 12:06:27.367 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/66e1e915-115f-477b-b557-f62674c6620c HTTP/1.1" 200
+2025-10-28 12:06:27.433 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:06:27.468 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:06:38.208 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 400
+2025-10-28 12:06:38.234 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User frederic.rauss@epfl.ch searching in library LEX_FR
+2025-10-28 12:06:38.236 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:06:38.236 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:06:41.378 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:06:42.361 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:06:42.363 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:06:42.363 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:06:42.367 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/libraries/LEX_FR/search HTTP/1.1" 200
+2025-10-28 12:06:42.439 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:06:42.441 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:06:42.481 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:06:42.482 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:06:42.679 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/82f6e148-13a4-4c04-bdfc-addcbecef1ee HTTP/1.1" 200
+2025-10-28 12:06:42.739 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:06:42.764 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:06:42.813 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:06:42.817 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 200
+2025-10-28 12:06:42.878 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:06:42.918 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:06:44.438 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:06:51.016 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completed HTTP/1.1" 200
+2025-10-28 12:06:51.365 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/82f6e148-13a4-4c04-bdfc-addcbecef1ee HTTP/1.1" 200
+2025-10-28 12:06:51.417 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:06:51.443 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:06:53.230 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:07:04.476 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:07:04.478 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:07:16.469 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:07:22.586 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:07:41.375 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:08:13.222 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 400
+2025-10-28 12:08:13.262 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User sarah.aubort@epfl.ch searching in library LEX_FR
+2025-10-28 12:08:13.264 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:08:13.265 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:08:16.733 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:08:16.967 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:08:16.969 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:08:16.969 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:08:16.973 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/libraries/LEX_FR/search HTTP/1.1" 200
+2025-10-28 12:08:17.067 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:08:17.070 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:08:17.072 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:08:17.072 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:08:17.544 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/66e1e915-115f-477b-b557-f62674c6620c HTTP/1.1" 200
+2025-10-28 12:08:17.597 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:08:17.627 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:08:17.699 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:08:17.702 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 200
+2025-10-28 12:08:17.781 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:08:17.817 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:08:19.641 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:08:22.587 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:08:38.696 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completed HTTP/1.1" 200
+2025-10-28 12:08:39.336 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/66e1e915-115f-477b-b557-f62674c6620c HTTP/1.1" 200
+2025-10-28 12:08:39.418 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:08:39.665 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:08:41.380 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:09:04.465 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:09:04.466 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:09:14.480 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 400
+2025-10-28 12:09:14.515 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User sarah.aubort@epfl.ch searching in library LEX_FR
+2025-10-28 12:09:14.517 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:09:14.517 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:09:17.517 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:09:18.441 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:09:18.443 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:09:18.443 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:09:18.449 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/libraries/LEX_FR/search HTTP/1.1" 200
+2025-10-28 12:09:18.522 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:09:18.526 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:09:18.527 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:09:18.528 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:09:18.912 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/66e1e915-115f-477b-b557-f62674c6620c HTTP/1.1" 200
+2025-10-28 12:09:18.982 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:09:19.008 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:09:19.081 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:09:19.084 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 200
+2025-10-28 12:09:19.155 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:09:19.202 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:09:21.288 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:09:22.596 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:09:41.433 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:09:41.984 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /audio/notification.mp3 HTTP/1.1" 206
+2025-10-28 12:09:42.166 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completed HTTP/1.1" 200
+2025-10-28 12:09:42.827 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/66e1e915-115f-477b-b557-f62674c6620c HTTP/1.1" 200
+2025-10-28 12:09:42.867 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:09:42.913 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:10:04.503 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:10:04.504 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:10:18.022 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:10:22.616 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:10:41.536 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:11:18.839 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:11:22.597 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:11:41.564 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:12:04.471 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:12:04.472 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:12:19.143 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:12:22.606 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:12:42.377 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:13:04.488 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:13:04.490 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:13:19.832 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:13:22.607 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:13:42.390 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:14:20.132 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:14:22.626 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:14:42.397 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:15:04.472 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:15:04.472 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:15:20.932 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:15:22.650 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:15:42.395 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:16:21.350 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:16:22.678 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:16:42.407 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:17:04.464 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:17:04.465 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:17:21.797 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:17:22.681 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:17:42.400 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:18:04.476 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:18:04.487 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:18:22.298 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:18:22.683 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:18:42.416 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:18:55.618 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /static/apple-touch-icon.png HTTP/1.1" 200
+2025-10-28 12:19:14.747 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:19:14.757 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:19:22.694 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:19:23.255 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:19:42.411 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:20:04.468 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:20:04.468 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:20:22.701 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:20:23.586 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:20:42.431 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:21:14.730 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:21:14.750 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:21:22.703 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:21:24.491 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:21:42.426 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:22:04.478 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:22:04.479 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:22:15.688 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:22:22.720 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:22:24.805 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:22:42.438 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:23:14.706 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:23:22.709 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:23:25.061 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:23:42.434 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:24:04.522 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:24:04.523 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:24:15.052 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:24:15.053 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:24:22.726 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:24:25.837 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:24:42.445 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:25:14.855 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:25:15.007 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:25:22.740 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:25:26.527 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:25:42.488 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:26:04.489 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:26:04.495 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:26:22.731 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:26:27.469 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:26:42.491 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:27:14.777 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:27:14.805 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:27:22.744 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:27:28.031 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:27:42.620 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:28:04.466 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:28:04.468 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:28:22.759 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:28:28.673 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:28:42.626 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:29:04.495 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:29:04.497 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:29:22.760 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:29:29.297 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:29:42.766 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:29:59.513 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:30:00.433 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:30:22.781 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:30:29.871 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:30:42.768 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:30:46.030 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:30:50.929 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/usage HTTP/1.1" 200
+2025-10-28 12:30:52.434 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/signout HTTP/1.1" 200
+2025-10-28 12:31:02.567 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET / HTTP/1.1" 200
+2025-10-28 12:31:03.292 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/nodes/8.BOyQCKoL.js HTTP/1.1" 200
+2025-10-28 12:31:03.374 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /manifest.json HTTP/1.1" 200
+2025-10-28 12:31:03.509 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/config HTTP/1.1" 200
+2025-10-28 12:31:03.541 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/assets/42.DUP86x5U.css HTTP/1.1" 200
+2025-10-28 12:31:03.541 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/immutable/nodes/42.BfLUaJpn.js HTTP/1.1" 200
+2025-10-28 12:31:04.478 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:31:11.808 | INFO     | open_webui.routers.auths:signin:471 - Signin request: pezeuy@gmail.com
+2025-10-28 12:31:11.808 | INFO     | open_webui.models.auths:authenticate_user:126 - authenticate_user: pezeuy@gmail.com
+2025-10-28 12:31:12.103 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/auths/signin HTTP/1.1" 200
+2025-10-28 12:31:12.151 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/config HTTP/1.1" 200
+2025-10-28 12:31:12.226 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/changelog HTTP/1.1" 200
+2025-10-28 12:31:12.243 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/archived?page=1&order_by=updated_at&direction=desc HTTP/1.1" 200
+2025-10-28 12:31:12.245 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/channels/ HTTP/1.1" 200
+2025-10-28 12:31:12.245 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:31:12.250 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200
+2025-10-28 12:31:12.252 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:31:12.279 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/all/tags HTTP/1.1" 200
+2025-10-28 12:31:12.289 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:31:12.303 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/pinned HTTP/1.1" 200
+2025-10-28 12:31:12.332 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:31:12.638 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/models HTTP/1.1" 200
+2025-10-28 12:31:12.640 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:31:12.671 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/configs/banners HTTP/1.1" 200
+2025-10-28 12:31:12.675 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:31:12.720 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/tools/ HTTP/1.1" 200
+2025-10-28 12:31:12.765 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /ollama/api/version HTTP/1.1" 200
+2025-10-28 12:31:12.831 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200
+2025-10-28 12:31:12.839 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=2 HTTP/1.1" 200
+2025-10-28 12:31:12.869 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:31:14.732 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:31:14.733 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:31:18.417 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 400
+2025-10-28 12:31:18.447 | INFO     | open_webui.routers.libraries:search_library:91 - 🔍 User pezeuy@gmail.com searching in library LEX_FR
+2025-10-28 12:31:18.450 | INFO     | open_webui.routers.libraries:get_user_group_names:33 - user_groups: []
+2025-10-28 12:31:18.450 | INFO     | open_webui.routers.libraries:search_library:94 - User groups: []
+2025-10-28 12:31:21.339 | INFO     | httpx._client:_send_single_request:1740 - HTTP Request: POST http://hierarchical-search-service.openwebui-epfl.svc.cluster.local/search/LEX_FR "HTTP/1.1 200 OK"
+2025-10-28 12:31:21.341 | INFO     | open_webui.routers.libraries:search_library:137 - ✅ Search successful: 15 results
+2025-10-28 12:31:21.341 | INFO     | open_webui.routers.libraries:search_library:138 -    Each result contains precise_content (display) and context_content (LLM)
+2025-10-28 12:31:21.345 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/libraries/LEX_FR/search HTTP/1.1" 200
+2025-10-28 12:31:21.400 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:31:21.401 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:31:21.426 | INFO     | open_webui.routers.auths:get_session_user:124 - user permission:
+2025-10-28 12:31:21.427 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/auths/ HTTP/1.1" 200
+2025-10-28 12:31:21.445 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/new HTTP/1.1" 200
+2025-10-28 12:31:21.495 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=2 HTTP/1.1" 200
+2025-10-28 12:31:21.521 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:31:21.568 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/00fcad68-93fe-4890-8f65-77f95051ab60 HTTP/1.1" 200
+2025-10-28 12:31:21.597 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:31:21.626 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:31:21.682 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:31:21.686 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completions HTTP/1.1" 200
+2025-10-28 12:31:21.715 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:31:21.767 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:31:22.774 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:31:23.019 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:31:30.534 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:31:42.892 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:31:42.975 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:31:43.058 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/chat/completed HTTP/1.1" 200
+2025-10-28 12:31:43.188 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "POST /api/v1/chats/00fcad68-93fe-4890-8f65-77f95051ab60 HTTP/1.1" 200
+2025-10-28 12:31:43.219 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:31:43.247 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:31:44.082 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:31:44.109 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/chats/?page=1 HTTP/1.1" 200
+2025-10-28 12:31:44.155 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/folders/ HTTP/1.1" 200
+2025-10-28 12:31:46.352 | INFO     | open_webui.routers.openai:get_all_models:741 - get_all_models()
+2025-10-28 12:31:46.658 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/models HTTP/1.1" 200
+2025-10-28 12:31:48.497 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/v1/users/user/settings HTTP/1.1" 200
+2025-10-28 12:32:03.208 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:32:15.412 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /api/usage HTTP/1.1" 200
+2025-10-28 12:32:22.775 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:32:30.970 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:32:42.900 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:33:03.214 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:33:04.474 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:33:14.705 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:33:14.707 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:33:22.788 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:33:31.502 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:33:43.028 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:34:03.244 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:34:07.874 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:34:14.708 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:34:14.712 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:34:22.800 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:34:31.987 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:34:43.038 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:35:03.478 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:35:14.728 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:35:14.731 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:35:22.808 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:35:32.693 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:35:43.165 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:36:04.489 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:36:04.507 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:36:22.914 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:36:33.055 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:36:43.180 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:37:05.476 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:37:14.763 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:37:14.766 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:37:22.835 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:37:33.853 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:37:43.305 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:38:04.486 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 200
+2025-10-28 12:38:22.846 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:38:34.258 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+2025-10-28 12:38:43.306 | INFO     | uvicorn.protocols.http.httptools_impl:send:476 - 128.178.218.134:0 - "GET /_app/version.json HTTP/1.1" 304
+(EPFL) PS C:\Dev\openwebui-k8s> 
