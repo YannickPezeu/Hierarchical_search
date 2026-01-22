@@ -12,6 +12,8 @@ A semantic search API built with **FastAPI** and **LlamaIndex** for indexing and
 - [Getting Started](#getting-started)
 - [API Endpoints](#api-endpoints)
 - [Web Scraping](#web-scraping)
+- [Docker](#docker)
+- [Kubernetes Deployment](#kubernetes-deployment)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -190,6 +192,11 @@ semantic-search-api/
 │       ├── servicenow.py       # /servicenow/* routes
 │       └── finance.py          # /finance/* routes
 │
+├── k8s/                        # Kubernetes configurations
+│   ├── manifest.yaml           # Deployment & Service
+│   ├── pvc.yaml                # Persistent Volume Claim
+│   └── secrets.yaml            # Environment secrets
+│
 ├── all_indexes/                # Library storage (generated)
 │   └── <library_id>/
 │       ├── source_files/       # Original files
@@ -202,7 +209,8 @@ semantic-search-api/
 ├── scripts/
 │   └── epfl-hierarchical-scraper.js  # EPFL page scraper
 │
-├── .env                        # Environment variables
+├── Dockerfile                  # Container build instructions
+├── .env                        # Environment variables (local dev)
 ├── requirements.txt            # Python dependencies
 └── README.md
 ```
@@ -335,6 +343,209 @@ EPFL_PASSWORD=password
 
 ---
 
+## 🐳 Docker
+
+### Dockerfile
+
+Create a `Dockerfile` at the project root:
+
+```dockerfile
+# Base image
+FROM python:3.11-slim
+
+# Working directory
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy source code
+COPY ./src ./src
+
+# Expose port
+EXPOSE 8000
+
+# Start command
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### Build and Run Locally
+
+```bash
+# Build the image
+docker build -t semantic-search-api:latest .
+
+# Run the container
+docker run -d \
+  --name semantic-search \
+  -p 8000:8000 \
+  -v $(pwd)/all_indexes:/app/all_indexes \
+  --env-file .env \
+  semantic-search-api:latest
+```
+
+### Push to Registry
+
+```bash
+# Tag for your registry
+docker tag semantic-search-api:latest ic-registry.epfl.ch/mr-pezeu/hierarchical-search-engine:latest
+
+# Push
+docker push ic-registry.epfl.ch/mr-pezeu/hierarchical-search-engine:latest
+```
+
+---
+
+## ☸️ Kubernetes Deployment
+
+### Prerequisites
+
+- Access to an EPFL Kubernetes cluster
+- `kubectl` configured with the correct context
+- Namespace `openwebui-epfl` created
+
+### Configuration Files
+
+#### 1. Secrets (`k8s/secrets.yaml`)
+
+Store all sensitive environment variables:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hierarchical-search-secrets
+  namespace: openwebui-epfl
+type: Opaque
+stringData:
+  # RCP API (Embeddings & LLM)
+  RCP_API_ENDPOINT: "https://inference.rcp.epfl.ch/v1"
+  RCP_API_KEY: "your-rcp-api-key"
+  RCP_QWEN_EMBEDDING_MODEL: "Qwen/Qwen3-Embedding-8B"
+
+  # Reranking
+  RERANK_MODEL: "BAAI/bge-reranker-v2-m3"
+
+  # Internal Security
+  INTERNAL_API_KEY: "your-internal-api-key"
+
+  # ServiceNow
+  SERVICENOW_URL: "https://epfl.service-now.com"
+  SERVICENOW_USERNAME: "WS_AI"
+  SERVICENOW_KEY: "your-servicenow-key"
+  SERVICENOW_KB_IDS_FINANCE: "kb_id_1,kb_id_2,kb_id_3"
+```
+
+#### 2. Persistent Volume Claim (`k8s/pvc.yaml`)
+
+Storage for indexes:
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hierarchical-search-pvc
+  namespace: openwebui-epfl
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 256Gi
+```
+
+#### 3. Deployment & Service (`k8s/manifest.yaml`)
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hierarchical-search-deployment
+  namespace: openwebui-epfl
+  labels:
+    app: hierarchical-search-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hierarchical-search-engine
+  template:
+    metadata:
+      labels:
+        app: hierarchical-search-engine
+    spec:
+      containers:
+        - name: search-api-container
+          image: ic-registry.epfl.ch/mr-pezeu/hierarchical-search-engine:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "500m"
+          envFrom:
+            - secretRef:
+                name: hierarchical-search-secrets
+          volumeMounts:
+            - name: index-storage
+              mountPath: /app/all_indexes
+      volumes:
+        - name: index-storage
+          persistentVolumeClaim:
+            claimName: hierarchical-search-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hierarchical-search-service
+  namespace: openwebui-epfl
+spec:
+  type: ClusterIP
+  selector:
+    app: hierarchical-search-engine
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+```
+
+### Deploy to Kubernetes
+
+```bash
+# Apply all configurations
+kubectl apply -f k8s/secrets.yaml
+kubectl apply -f k8s/pvc.yaml
+kubectl apply -f k8s/manifest.yaml
+
+# Check deployment status
+kubectl get pods -n openwebui-epfl -l app=hierarchical-search-engine
+
+# View logs
+kubectl logs -n openwebui-epfl -l app=hierarchical-search-engine -f
+
+# Access the service (port-forward for testing)
+kubectl port-forward -n openwebui-epfl svc/hierarchical-search-service 8080:80
+```
+
+### Update Deployment
+
+```bash
+# After pushing a new image, restart the deployment
+kubectl rollout restart deployment/hierarchical-search-deployment -n openwebui-epfl
+
+# Monitor rollout
+kubectl rollout status deployment/hierarchical-search-deployment -n openwebui-epfl
+```
+
+---
+
 ## 🔧 Troubleshooting
 
 ### Error: "INTERNAL_API_KEY not set"
@@ -360,6 +571,28 @@ Check that:
 # Enable DEBUG logs
 export LOG_LEVEL=DEBUG
 python -m src.main
+```
+
+### Kubernetes Issues
+
+```bash
+# Check pod status
+kubectl get pods -n openwebui-epfl -l app=hierarchical-search-engine
+
+# Describe pod for events/errors
+kubectl describe pod -n openwebui-epfl -l app=hierarchical-search-engine
+
+# Check logs
+kubectl logs -n openwebui-epfl -l app=hierarchical-search-engine --tail=100
+
+# Enter pod shell for debugging
+kubectl exec -it -n openwebui-epfl deployment/hierarchical-search-deployment -- /bin/bash
+
+# Check PVC is bound
+kubectl get pvc -n openwebui-epfl
+
+# Verify secrets exist
+kubectl get secrets -n openwebui-epfl hierarchical-search-secrets
 ```
 
 ---

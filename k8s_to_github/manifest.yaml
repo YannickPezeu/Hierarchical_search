@@ -1,0 +1,105 @@
+# ===================================================================
+#  Kubernetes Deployment & Service
+# ===================================================================
+
+# -------------------------------------------------------------------
+#  DEPLOYMENT: Manages application pods
+# -------------------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hierarchical-search-deployment
+  namespace: openwebui-epfl
+  labels:
+    app: hierarchical-search-engine
+spec:
+  replicas: 1                    # Number of pod instances
+  selector:
+    matchLabels:
+      app: hierarchical-search-engine
+  template:
+    metadata:
+      labels:
+        app: hierarchical-search-engine
+    spec:
+      containers:
+        - name: search-api-container
+          image: ic-registry.epfl.ch/mr-pezeu/hierarchical-search-engine:latest
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 8000
+              name: http
+
+          # Resource limits
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "500m"
+
+          # Load environment variables from secrets
+          envFrom:
+            - secretRef:
+                name: hierarchical-search-secrets
+
+          # Mount persistent storage for indexes
+          volumeMounts:
+            - name: index-storage
+              mountPath: /app/all_indexes
+
+          # Health checks
+          livenessProbe:
+            httpGet:
+              path: /docs
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /docs
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+      # Node affinity (optional: exclude specific nodes)
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: NotIn
+                    values:
+                      - iccluster054    # Exclude problematic nodes
+
+      # Volume definitions
+      volumes:
+        - name: index-storage
+          persistentVolumeClaim:
+            claimName: hierarchical-search-pvc
+
+---
+# -------------------------------------------------------------------
+#  SERVICE: Exposes application within the cluster
+# -------------------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: hierarchical-search-service
+  namespace: openwebui-epfl
+spec:
+  type: ClusterIP              # Internal cluster access only
+  selector:
+    app: hierarchical-search-engine
+  ports:
+    - protocol: TCP
+      port: 80                 # Service port
+      targetPort: 8000         # Container port

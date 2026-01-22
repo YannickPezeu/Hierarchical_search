@@ -1,0 +1,17 @@
+# ===================================================================
+#  Kubernetes Persistent Volume Claim
+# ===================================================================
+# Storage for document indexes and source files
+# ===================================================================
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hierarchical-search-pvc
+  namespace: openwebui-epfl
+spec:
+  accessModes:
+    - ReadWriteMany    # Allows multiple pods to read/write (needed for scaling)
+  resources:
+    requests:
+      storage: 256Gi   # Adjust based on expected index size
