@@ -1,0 +1,40 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile.docling
+#1 transferring dockerfile: 1.12kB 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python:3.11-slim
+#2 DONE 0.9s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/6] FROM docker.io/library/python:3.11-slim@sha256:d963377c651e0ba71336362d37cb32531e9a569407c7bea07e2a05a88dde145d
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 40B done
+#5 DONE 0.0s
+
+#6 [2/6] RUN apt-get update && apt-get install -y --no-install-recommends     tesseract-ocr     tesseract-ocr-fra     tesseract-ocr-eng     libtesseract-dev     poppler-utils     libgl1     libglib2.0-0     libsm6     libxext6     libxrender-dev     libgomp1     wget     git     && rm -rf /var/lib/apt/lists/*
+#6 CACHED
+
+#7 [4/6] RUN pip install --no-cache-dir     torch torchvision torchaudio     onnxruntime-gpu
+#7 CACHED
+
+#8 [5/6] RUN pip install --no-cache-dir     docling     "transformers>=4.39.0"     tqdm
+#8 CACHED
+
+#9 [3/6] WORKDIR /app
+#9 CACHED
+
+#10 [6/6] COPY docling_convert.py .
+#10 CACHED
+
+#11 exporting to image
+#11 exporting layers done
+#11 writing image sha256:a409352fe88f63b55ce20276069e2764a9afc6ce25af845e26f6c3e6c2bef45a done
+#11 naming to ic-registry.epfl.ch/mr-pezeu/docling-converter:latest done
+#11 DONE 0.0s

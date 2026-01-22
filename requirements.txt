@@ -26,3 +26,4 @@ faiss-cpu # Utilisez faiss-gpu si vous avez des GPUs sur votre cluster
 pymupdf
 rapidfuzz
 beautifulsoup4
+markdownify

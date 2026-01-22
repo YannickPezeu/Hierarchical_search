@@ -1,12 +1,15 @@
 # src/core/models.py
 
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
 
 class SearchRequest(BaseModel):
     query: str
-    user_groups: List[str]
+    user_groups: List[str] = []
     password: Optional[str] = None
+    rerank: bool = Field(default=True, description="Activer ou désactiver le reranking interne")
+    top_k: int = Field(default=15, description="Nombre de résultats avant reranking (ou final si rerank=False)")
 
 
 class IndexingStatus(BaseModel):
@@ -49,3 +52,21 @@ class IndexResponse(BaseModel):
     status: str
     message: str
     index_path: str
+
+class ServiceNowIngestRequest(BaseModel):
+    index_id: str
+    kb_ids: List[str]
+    user_groups: str
+
+class ServiceNowLiveSearchRequest(BaseModel):
+    query: str
+    # Optionnel : si vide, le backend utilisera SERVICENOW_KB_IDS_FINANCE
+    kb_ids: Optional[str] = None
+    top_k: int = 5
+
+class ServiceNowSearchResult(BaseModel):
+    title: str
+    content: str
+    url: str
+    kb_name: str
+    score: float

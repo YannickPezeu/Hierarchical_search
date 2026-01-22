@@ -416,20 +416,122 @@ def quicktest_search_enrichment():
 #     print(f"\n{'=' * 80}")
 #     print("✅ Vérification de la structure terminée!")
 
+import os
+import json
+import requests
+from requests.auth import HTTPBasicAuth
+from fastapi.testclient import TestClient
+from dotenv import load_dotenv
 
+# Charger les variables d'environnement (.env)
+load_dotenv()
+
+
+def get_all_active_kb_ids():
+    """
+    Interroge ServiceNow pour récupérer les IDs de TOUTES les Knowledge Bases actives.
+    """
+    sn_username = "WS_AI"
+    sn_password = os.getenv("SERVICENOW_KEY")
+    base_url = "https://epfl.service-now.com/api/now/table/kb_knowledge_base"
+
+    print("🔍 Récupération de la liste des Knowledge Bases actives depuis ServiceNow...")
+
+    params = {
+        "sysparm_query": "active=true",  # Uniquement les actives
+        "sysparm_fields": "sys_id,title",  # On ne veut que l'ID et le titre
+        "sysparm_limit": 100
+    }
+
+    try:
+        response = requests.get(
+            base_url,
+            params=params,
+            auth=HTTPBasicAuth(sn_username, sn_password),
+            headers={"Accept": "application/json"}
+        )
+
+        if response.status_code == 200:
+            kbs = response.json().get('result', [])
+            print(f"✅ {len(kbs)} Knowledge Bases trouvées.")
+
+            # Affichage pour info
+            for kb in kbs:
+                print(f"   - {kb['title']} ({kb['sys_id']})")
+
+            # Retourne la liste des IDs
+            return [kb['sys_id'] for kb in kbs]
+        else:
+            print(f"❌ Erreur ServiceNow: {response.status_code} - {response.text}")
+            return []
+
+    except Exception as e:
+        print(f"❌ Exception lors de la récupération des KBs: {e}")
+        return []
+
+
+def try_trigger_servicenow_ingestion_all(client):
+    """
+    Récupère toutes les KBs et déclenche l'ingestion massive.
+    """
+    print("\n🚀 Lancement de l'ingestion COMPLETE de ServiceNow...")
+    print("=" * 60)
+
+    # 1. Récupération dynamique des IDs
+    all_kb_ids = get_all_active_kb_ids()
+
+    if not all_kb_ids:
+        print("⚠️ Aucune KB trouvée ou erreur de connexion. Abandon.")
+        return
+
+    # 2. Configuration du payload
+    test_index_id = "servicenow_full_index"
+    # Optionnel : définir des groupes si nécessaire, sinon None (public/admin)
+    test_groups = ["public"]
+
+    payload = {
+        "index_id": test_index_id,
+        "kb_ids": all_kb_ids,
+        "user_groups": test_groups
+    }
+
+    # 3. Headers (API Key du backend)
+    api_key = os.getenv("INTERNAL_API_KEY")
+    headers = {
+        "X-API-Key": api_key,
+        "Content-Type": "application/json"
+    }
+
+    print(f"\n📤 Envoi de la requête d'ingestion au Backend RAG...")
+    print(f"   Index cible : {test_index_id}")
+    print(f"   Nombre de KBs : {len(all_kb_ids)}")
+
+    try:
+        # 4. Appel de l'API Backend
+        response = client.post(
+            "/servicenow/ingest",
+            json=payload,
+            headers=headers
+        )
+
+        print(f"\n📊 Statut API Backend: {response.status_code}")
+
+        if response.status_code in [200, 202]:
+            print("✅ Démarrage réussi !")
+            print(json.dumps(response.json(), indent=2))
+            print("\n⏳ L'ingestion tourne en arrière-plan. Cela va prendre du temps.")
+        else:
+            print(f"❌ Échec de l'appel API: {response.text}")
+
+    except Exception as e:
+        print(f"❌ Erreur technique: {e}")
+
+
+# --- Bloc d'exécution ---
 if __name__ == '__main__':
+    from src.main import app
+
     client = TestClient(app)
 
-    # try_search_wrong_password(client)
-    # try_create_index_from_existing_files(client)
-    # try_search_index_success(client)
-    # try_search_index_success_api()
-
-    # Test d'indexation avec structure hiérarchique
-    quicktest_enrichment()
-
-    # Test de recherche
-    # quicktest_search_enrichment()
-
-    # Test de vérification de la structure
-    # test_hierarchical_structure()
+    # Lancer l'ingestion massive
+    try_trigger_servicenow_ingestion_all(client)

@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 # Import the router objects from your route files
-from src.routes import index, search, files, libraries
+from src.routes import index, search, files, libraries, servicenow, finance
 
 # --- Configuration ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -42,7 +42,9 @@ app.add_middleware(
 app.include_router(index.router, prefix="/index", tags=["Indexing"])
 app.include_router(search.router, prefix="/search", tags=["Searching"])
 app.include_router(files.router, prefix="/files", tags=["File Serving"])
-app.include_router(libraries.router, prefix="/libraries", tags=["libraries"])  # ← Nouvelle route
+app.include_router(libraries.router, prefix="/libraries", tags=["libraries"])
+app.include_router(servicenow.router, prefix="/servicenow", tags=["ServiceNow"])
+app.include_router(finance.router, prefix="/finance", tags=["Finance Hybrid"])
 
 # 5. Main execution block
 if __name__ == '__main__':

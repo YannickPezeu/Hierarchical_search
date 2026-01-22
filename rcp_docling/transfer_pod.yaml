@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: file-transfer-pod
+  namespace: runai-sci-ic-mr-pezeu
+spec:
+  containers:
+  - name: transfer
+    image: alpine:latest
+    command: ["sleep", "86400"]  # 24 heures
+    volumeMounts:
+    - name: scratch
+      mountPath: /scratch
+  volumes:
+  - name: scratch
+    persistentVolumeClaim:
+      claimName: sci-ic-mr-scratch
+  restartPolicy: Never

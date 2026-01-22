@@ -1,0 +1,43 @@
+# Dockerfile.docling - Version GPU
+FROM python:3.11-slim
+
+# Éviter les prompts interactifs
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Dépendances système
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    tesseract-ocr-fra \
+    tesseract-ocr-eng \
+    libtesseract-dev \
+    poppler-utils \
+    libgl1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    wget \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# 1. Installer PyTorch avec support CUDA (par défaut sur Linux)
+# On installe aussi onnxruntime-gpu pour l'accélération de l'OCR
+RUN pip install --no-cache-dir \
+    torch torchvision torchaudio \
+    onnxruntime-gpu
+
+# 2. Installer Docling et upgrade transformers pour éviter l'erreur RTDetrImageProcessor
+RUN pip install --no-cache-dir \
+    docling \
+    "transformers>=4.39.0" \
+    tqdm
+
+# Copier le script
+COPY docling_convert.py .
+
+CMD ["python", "docling_convert.py"]
