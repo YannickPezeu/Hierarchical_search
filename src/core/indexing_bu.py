@@ -33,7 +33,6 @@ from src.core.utils import get_index_path
 from src.core.indexing_html import _annotate_html_with_anchors, clean_html_before_docling
 import time
 from src.core.cache import search_cache
-from src.core.sqlite_docstore import SqliteDocumentStore, SQLITE_DOCSTORE_FNAME
 
 
 
@@ -1298,33 +1297,22 @@ def run_indexing_logic(source_md_dir: str, index_dir: str):
 
     # ÉTAPE 6 : INDEXATION
     logger.info("\n" + "=" * 80)
-    logger.info("ÉTAPE 6 : INDEXATION FAISS + EMBEDDINGS (SQLite docstore)")
+    logger.info("ÉTAPE 6 : INDEXATION FAISS + EMBEDDINGS")
     logger.info("=" * 80)
 
     d = 4096
     faiss_index = faiss.IndexFlatL2(d)
     vector_store = FaissVectorStore(faiss_index=faiss_index)
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
 
-    # ── SQLite docstore: only child + parent nodes ──
-    # Sub-chunks are NOT stored in the docstore — they live only in FAISS.
-    # This reduces docstore size by ~70-75% and eliminates the JSON parse bottleneck.
-    sqlite_db_path = os.path.join(index_dir, SQLITE_DOCSTORE_FNAME)
-    docstore = SqliteDocumentStore.from_new(sqlite_db_path)
-
-    storage_context = StorageContext.from_defaults(
-        vector_store=vector_store,
-        docstore=docstore
-    )
-
-    # Only child + parent nodes go into the docstore (NOT sub-chunks)
-    all_nodes_for_docstore = child_nodes + parent_nodes
+    all_nodes_for_docstore = sub_chunks + child_nodes + parent_nodes
     storage_context.docstore.add_documents(all_nodes_for_docstore)
 
-    logger.info(f"📦 Docstore (SQLite - no sub-chunks):")
+    logger.info(f"📦 Docstore:")
+    logger.info(f"  • Sub-chunks (embedding): {len(sub_chunks)}")
     logger.info(f"  • Child nodes: {len(child_nodes)}")
     logger.info(f"  • Parent nodes: {len(parent_nodes)}")
-    logger.info(f"  • TOTAL in docstore: {len(all_nodes_for_docstore)}")
-    logger.info(f"  • Sub-chunks (FAISS only, not in docstore): {len(sub_chunks)}")
+    logger.info(f"  • TOTAL: {len(all_nodes_for_docstore)}")
 
     logger.info(f"\n🚀 Creating embeddings for {len(sub_chunks)} sub-chunks...")
     logger.info(f"   (This is the slowest step - calling embedding API)")
@@ -1339,7 +1327,7 @@ def run_indexing_logic(source_md_dir: str, index_dir: str):
     index.storage_context.persist(persist_dir=index_dir)
 
     logger.info(f"\n{'=' * 80}")
-    logger.info(f"✅ INDEXATION COMPLÈTE (SQLite docstore, STRUCTURE HIÉRARCHIQUE PRÉSERVÉE)")
+    logger.info(f"✅ INDEXATION COMPLÈTE (STRUCTURE HIÉRARCHIQUE PRÉSERVÉE)")
     logger.info(f"{'=' * 80}\n")
 
 

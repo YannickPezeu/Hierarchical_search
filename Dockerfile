@@ -21,4 +21,4 @@ EXPOSE 8000
 # Étape 6: Définir la commande pour lancer l'application.
 # Uvicorn est le serveur ASGI qui exécute notre application FastAPI.
 # L'hôte 0.0.0.0 est nécessaire pour que le conteneur soit accessible de l'extérieur.
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

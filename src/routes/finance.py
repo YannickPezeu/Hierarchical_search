@@ -35,7 +35,7 @@ async def search_finance_hybrid(
 ):
     """
     Recherche Hybride Finance :
-    1. Lex-Finance (Vectoriel local) - Top 20
+    1. large_campus2 (Vectoriel local) - Top 20
     2. ServiceNow (Live API) - Top 20
     3. Fusion & Reranking global (BGE-M3) - Top 10
     """
@@ -54,7 +54,7 @@ async def search_finance_hybrid(
     # Note: On appelle directement la fonction de l'autre route.
     # C'est un peu "hacky" mais ça marche car c'est une fonction async standard.
     task_lex = search_in_index(
-        index_id="LEX_FR",  # Assure-toi que c'est le bon ID d'index
+        index_id="large_campus2",  # Assure-toi que c'est le bon ID d'index
         request=lex_request,
         _=True  # Bypass du dependency check lors de l'appel direct
     )
@@ -114,7 +114,7 @@ async def search_finance_hybrid(
     # 4. Global Reranking
     if RERANK_API_BASE and RERANK_API_KEY:
         reranker = ApiReranker(
-            top_n=10,  # On veut le Top 10 final
+            top_n=15,  # On veut le Top 10 final
             model=RERANK_MODEL,
             api_base=RERANK_API_BASE,
             api_key=RERANK_API_KEY

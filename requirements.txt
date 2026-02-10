@@ -27,3 +27,4 @@ pymupdf
 rapidfuzz
 beautifulsoup4
 markdownify
+tqdm

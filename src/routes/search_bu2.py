@@ -21,41 +21,10 @@ from src.core.models import SearchRequest, SearchResultNode
 from src.core.utils import get_index_path, verify_password
 from src.core.cache import search_cache  # ✨ NOUVEAU : Import du cache
 from src.core.sqlite_docstore import SqliteDocumentStore, SQLITE_DOCSTORE_FNAME
+import glob
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-# ── URL construction ─────────────────────────────────────────────────────────
-
-def build_document_url(source_url: str, file_type: str, page_number: int = None) -> str:
-    """
-    Build the final clickable URL for a search result.
-
-    - PDFs on EPFL website: append #page=N for direct page navigation
-    - HTML pages: return source_url as-is (it's already the right page)
-    - Fallback: return whatever we have
-    """
-    if not source_url or source_url == "URL not found":
-        return "URL not found"
-
-    if file_type == "pdf" and page_number:
-        return f"{source_url}#page={page_number}"
-
-    return source_url
-
-
-def _log_token_estimate(results: list, source: str = ""):
-    """Log an approximate token count for the complete response sent to the LLM."""
-    total_chars = 0
-    for r in results:
-        total_chars += len(r.context_content or "")
-        total_chars += len(r.title or "")
-        total_chars += len(r.source_url or "")
-        total_chars += len(r.header_path or "")
-    approx_tokens = total_chars // 4
-    logger.info(f"📊 Response estimate ({source}): {len(results)} results, "
-                f"~{total_chars:,} chars, ~{approx_tokens:,} tokens")
-
 
 INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY")
 
@@ -169,39 +138,62 @@ def build_result_from_cache(
         SearchResultNode complet
     """
     try:
+        logger.info(f"Rebuilding result from cache: child_node_id={child_node_id}, parent_node_id={parent_node_id}, score={score}")
         child_node = docstore.get_node(child_node_id)
         parent_node = docstore.get_node(parent_node_id)
 
         precise_content = child_node.get_content()
         context_content = parent_node.get_content()
 
+        # Construire le titre depuis file_name et header_path
         file_name = child_node.metadata.get("file_name", "Unknown")
-        source_filename = child_node.metadata.get("source_filename", "")
-        page_number = child_node.metadata.get("page_number")
+        header_path = child_node.metadata.get("header_path", "")
 
-        # Determine file type from source_filename (original extension) or file_name
+        title = file_name
+
+        # Utiliser source_filename au lieu de file_name pour le type
+        source_filename = child_node.metadata.get("source_filename")
+
+        if not source_filename:
+            # Fallback : chercher dans l'archive avec le nom de base
+            logger.info(f"  source_filename missing for {file_name}. Attempting glob search in archive.")
+            file_name_base = os.path.splitext(file_name)[0]
+            archive_dir = os.path.join(index_path, "source_files_archive")
+            pattern = os.path.join(archive_dir, "**", f"{file_name_base}.*")
+            matching_files = glob.glob(pattern, recursive=True)
+
+            exact_matches = [
+                f for f in matching_files
+                if os.path.splitext(os.path.basename(f))[0] == file_name_base
+            ]
+
+            if exact_matches:
+                source_filename = os.path.basename(exact_matches[0])
+                logger.debug(f"  Found source file via glob: {source_filename}")
+
+        # Construire file_url et file_type depuis source_filename
         if source_filename:
+            file_url = source_filename
             file_type = os.path.splitext(source_filename)[1].lower().lstrip('.')
+            logger.debug(f"  file_type={file_type} from source_filename={source_filename}")
         else:
+            file_url = file_name
             file_type = os.path.splitext(file_name)[1].lower().lstrip('.')
-
-        # Build the clickable URL: source_url + #page=N for PDFs
-        raw_source_url = child_node.metadata.get("source_url", "URL not found")
-        final_url = build_document_url(raw_source_url, file_type, page_number)
+            logger.warning(f"  ⚠️ Using file_name as fallback: {file_name} → type={file_type}")
 
         return SearchResultNode(
             precise_content=precise_content,
             context_content=context_content,
             score=score,
-            title=str(file_name),
-            source_url=final_url,
+            title=str(title),
+            source_url=child_node.metadata.get("source_url", "URL not found"),
             header_path=child_node.metadata.get("header_path", "/"),
-            file_url=source_filename or file_name,
+            file_url=file_url,
             file_type=file_type,
             search_text_start=child_node.metadata.get("search_text_start"),
             search_text_end=child_node.metadata.get("search_text_end"),
             node_anchor_id=child_node.metadata.get("node_anchor_id"),
-            page_number=page_number,
+            page_number=child_node.metadata.get("page_number"),
             page_confidence=child_node.metadata.get("page_confidence"),
             html_confidence=child_node.metadata.get("html_confidence"),
             node_hierarchy="cached"
@@ -341,7 +333,6 @@ async def search_in_index(
             except Exception as e:
                 logger.error(f"❌ Error rebuilding cached result: {e}")
                 continue
-        _log_token_estimate(results, source="cache hit")
         return results
 
     # ---------------------------------------------------------
@@ -477,33 +468,41 @@ async def search_in_index(
         child_node = pair['child_node']
         parent_node = pair['parent_node']
 
+        # Logique de métadonnées pour URL/Titre (comme avant)
         file_name = child_node.metadata.get("file_name", "Unknown")
-        source_filename = child_node.metadata.get("source_filename", "")
-        page_number = child_node.metadata.get("page_number")
+        source_filename = child_node.metadata.get("source_filename")
 
-        # Determine file type from original source extension
+        # Fallback glob si source_filename manque
+        if not source_filename:
+            logger.info(f"  source_filename missing for {file_name}. Attempting glob search in archive.")
+            file_name_base = os.path.splitext(file_name)[0]
+            archive_dir = os.path.join(index_path, "source_files_archive")
+            pattern = os.path.join(archive_dir, "**", f"{file_name_base}.*")
+            matching_files = glob.glob(pattern, recursive=True)
+            exact_matches = [f for f in matching_files if os.path.splitext(os.path.basename(f))[0] == file_name_base]
+            if exact_matches:
+                source_filename = os.path.basename(exact_matches[0])
+
         if source_filename:
+            file_url = source_filename
             file_type = os.path.splitext(source_filename)[1].lower().lstrip('.')
         else:
+            file_url = file_name
             file_type = os.path.splitext(file_name)[1].lower().lstrip('.')
-
-        # Build the clickable URL: source_url + #page=N for PDFs
-        raw_source_url = child_node.metadata.get("source_url", "URL not found")
-        final_url = build_document_url(raw_source_url, file_type, page_number)
 
         results.append(SearchResultNode(
             precise_content=child_node.get_content(),
             context_content=parent_node.get_content(),
             score=pair['rerank_score'],
             title=str(file_name),
-            source_url=final_url,
+            source_url=child_node.metadata.get("source_url", "URL not found"),
             header_path=child_node.metadata.get("header_path", "/"),
-            file_url=source_filename or file_name,
+            file_url=file_url,
             file_type=file_type,
             search_text_start=child_node.metadata.get("search_text_start"),
             search_text_end=child_node.metadata.get("search_text_end"),
             node_anchor_id=child_node.metadata.get("node_anchor_id"),
-            page_number=page_number,
+            page_number=child_node.metadata.get("page_number"),
             page_confidence=child_node.metadata.get("page_confidence"),
             html_confidence=child_node.metadata.get("html_confidence"),
             node_hierarchy=pair['hierarchy']
@@ -521,7 +520,6 @@ async def search_in_index(
             results=cache_data
         )
 
-    _log_token_estimate(results, source="full pipeline")
     return results
 
 
