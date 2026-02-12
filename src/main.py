@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 # Import the router objects from your route files
-from src.routes import index, search, files, libraries, servicenow, finance
+from src.routes import index, search, libraries, servicenow, finance
 
 # --- Configuration ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -41,7 +41,6 @@ app.add_middleware(
 # The tags group the routes nicely in the OpenAPI docs (/docs).
 app.include_router(index.router, prefix="/index", tags=["Indexing"])
 app.include_router(search.router, prefix="/search", tags=["Searching"])
-app.include_router(files.router, prefix="/files", tags=["File Serving"])
 app.include_router(libraries.router, prefix="/libraries", tags=["libraries"])
 app.include_router(servicenow.router, prefix="/servicenow", tags=["ServiceNow"])
 app.include_router(finance.router, prefix="/finance", tags=["Finance Hybrid"])

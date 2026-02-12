@@ -37,11 +37,9 @@ class SearchResultNode(BaseModel):
     header_path: Optional[str] = None
     file_url: Optional[str] = None
     file_type: Optional[str] = None
-    # ✨ NOUVEAU : Fragments start/end pour text-fragment (HTML)
+    # Fragments start/end pour text-fragment (HTML)
     search_text_start: Optional[str] = None
     search_text_end: Optional[str] = None
-    # Pour navigation dans les PDFs
-    node_anchor_id: Optional[str] = None
     # Pour info/debug
     page_number: Optional[int] = None
     page_confidence: Optional[float] = None

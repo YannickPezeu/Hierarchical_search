@@ -27,6 +27,6 @@ Dockerfile
 .dockerignore
 
 # kubernetes
-/k8s
+k8s/secrets.yaml
 pupetter_scraper/epfl_hierarchical_data
 node_modules

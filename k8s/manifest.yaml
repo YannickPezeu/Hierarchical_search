@@ -1,0 +1,107 @@
+# ===================================================================
+#  DEPLOYMENT : Comment lancer et gérer les pods de votre application
+# ===================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hierarchical-search-deployment
+  namespace: openwebui-epfl
+  labels:
+    app: hierarchical-search-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hierarchical-search-engine
+  template:
+    metadata:
+      labels:
+        app: hierarchical-search-engine
+
+    spec:
+      containers:
+        - name: search-api-container
+          image: ic-registry.epfl.ch/mr-pezeu/hierarchical-search-engine:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+
+          resources:
+            requests:
+              memory: "8Gi"
+              cpu: "1"
+            limits:
+              memory: "14Gi"
+              cpu: "2"
+
+          envFrom:
+            - configMapRef:
+                name: hierarchical-search-config
+            - secretRef:
+                name: hierarchical-search-secrets
+
+          volumeMounts:
+            - name: index-storage
+              mountPath: /app/all_indexes
+
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: NotIn
+                    values:
+                      - iccluster054
+
+      volumes:
+        - name: index-storage
+          persistentVolumeClaim:
+            claimName: hierarchical-search-pvc
+---
+# ===================================================================
+#  SERVICE : Comment exposer votre application dans le cluster
+# ===================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: hierarchical-search-service
+  namespace: openwebui-epfl
+spec:
+  type: ClusterIP
+  selector:
+    app: hierarchical-search-engine
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+---
+# ===================================================================
+#  HPA : Horizontal Pod Autoscaler pour le scaling automatique
+# ===================================================================
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hierarchical-search-hpa
+  namespace: openwebui-epfl
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: hierarchical-search-deployment
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80

@@ -1,0 +1,92 @@
+# ===================================================================
+#  CRONJOB : Scraping mensuel du site EPFL
+# ===================================================================
+#
+#  Fonctionnement :
+#    1. Scrape dans large_campus2_new/
+#    2. Vérifie que le scrape a produit des données
+#    3. Swap atomique : old → delete, live → old, new → live
+#
+#  Lancement manuel :
+#    kubectl create job --from=cronjob/epfl-scraper-cronjob manual-scrape -n openwebui-epfl
+#    kubectl logs -f job/manual-scrape -n openwebui-epfl
+#
+# ===================================================================
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: epfl-scraper-cronjob
+  namespace: openwebui-epfl
+  labels:
+    app: epfl-scraper
+spec:
+  # Le 1er de chaque mois à 2h du matin (UTC)
+  # Hebdomadaire : "0 2 * * 0"
+  schedule: "0 2 1 * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+
+  jobTemplate:
+    spec:
+      # Timeout : 4 jours
+      activeDeadlineSeconds: 345600
+      backoffLimit: 0
+
+      template:
+        metadata:
+          labels:
+            app: epfl-scraper
+        spec:
+          restartPolicy: Never
+
+          containers:
+            - name: scraper
+              image: ic-registry.epfl.ch/mr-pezeu/epfl-scraper:latest
+              imagePullPolicy: Always
+
+              # Les URLs sont passées en args au entrypoint.sh → node script
+              args:
+                - "https://www.epfl.ch/campus/"
+                - "https://www.epfl.ch/about/"
+                - "https://www.epfl.ch/research/"
+                - "https://www.epfl.ch/education/"
+                - "https://www.epfl.ch/innovation/"
+                - "https://www.epfl.ch/schools/"
+
+              env:
+                - name: LIBRARY_NAME
+                  value: "large_campus2"
+
+              envFrom:
+                - configMapRef:
+                    name: hierarchical-search-config
+                - secretRef:
+                    name: hierarchical-search-secrets
+
+              resources:
+                requests:
+                  memory: "2Gi"
+                  cpu: "500m"
+                limits:
+                  memory: "4Gi"
+                  cpu: "2"
+
+              volumeMounts:
+                - name: scraped-data
+                  mountPath: /app/all_indexes
+
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: kubernetes.io/hostname
+                        operator: NotIn
+                        values:
+                          - iccluster054
+
+          volumes:
+            - name: scraped-data
+              persistentVolumeClaim:
+                claimName: scraper-data-pvc

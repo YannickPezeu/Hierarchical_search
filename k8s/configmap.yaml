@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hierarchical-search-config
+  namespace: openwebui-epfl
+data:
+  # --- API Endpoints ---
+  RCP_API_ENDPOINT: "https://inference.rcp.epfl.ch/v1"
+
+  # --- Model Configuration ---
+  RCP_QWEN_EMBEDDING_MODEL: "Qwen/Qwen3-Embedding-8B"
+  RERANK_MODEL: "BAAI/bge-reranker-v2-m3"
+
+  # --- ServiceNow Configuration ---
+  SERVICENOW_URL: "https://epfl.service-now.com"
+  SERVICENOW_USERNAME: "WS_AI"
+  SERVICENOW_KB_IDS_FINANCE: "3969aa4edbb08cd079f593c8f49619a0,7243ab6347332100158b949b6c9a7194,90d645064fd6b6009d2bdf601310c7a2,b5e390e3dbb430d031895c88f49619ed,bb4ef5394f8a72009d2bdf601310c7e9"

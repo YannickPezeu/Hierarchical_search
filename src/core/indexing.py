@@ -138,17 +138,15 @@ def remove_duplicate_headers(markdown_text: str) -> str:
 
 def annotate_documents_with_node_anchors(
         nodes: List,
-        source_files_archive: str,
+        source_files_dir: str,
         md_files_dir: str
 ) -> List:
     """
-    Modifie les documents sources (PDF/HTML) pour insérer des ancres/destinations
-    pointant vers chaque child node.
-
-    ⚠️ VERSION HIÉRARCHIQUE : Gère les chemins relatifs dans l'arborescence
+    Annotate nodes with page numbers (PDFs) and text fragments (HTML)
+    by reading the original source files.
     """
     logger.info(f"\n{'=' * 80}")
-    logger.info(f"ANNOTATION DES DOCUMENTS AVEC ANCRES DE NODES (HIÉRARCHIQUE)")
+    logger.info(f"ANNOTATION DES DOCUMENTS (PAGE NUMBERS & TEXT FRAGMENTS)")
     logger.info(f"{'=' * 80}")
 
     nodes_by_document = {}
@@ -184,12 +182,11 @@ def annotate_documents_with_node_anchors(
             total_failed += len(doc_nodes)
             continue
 
-        # ✅ NOUVEAU : Construire le chemin complet avec la hiérarchie
+        # Construire le chemin complet vers le fichier source
         if source_relative_path:
-            source_path = os.path.join(source_files_archive, source_relative_path)
+            source_path = os.path.join(source_files_dir, source_relative_path)
         else:
-            # Fallback pour anciens fichiers sans source_relative_path
-            source_path = os.path.join(source_files_archive, source_filename)
+            source_path = os.path.join(source_files_dir, source_filename)
 
         if not os.path.exists(source_path):
             logger.warning(f"⚠️ Fichier source introuvable : {source_path}")
@@ -204,9 +201,6 @@ def annotate_documents_with_node_anchors(
         logger.info(f"   • {len(child_nodes)} child nodes à annoter")
         logger.info(f"   • {len(parent_nodes)} parent nodes (recevront un ID de fallback)")
 
-        # Parent nodes : ID de fallback
-        for parent in parent_nodes:
-            parent.metadata['node_anchor_id'] = f"node_{parent.id_}"
         total_skipped_parents += len(parent_nodes)
 
         nodes_to_annotate = child_nodes
@@ -216,7 +210,7 @@ def annotate_documents_with_node_anchors(
 
         if nodes_to_annotate:
             if ext_lower == '.pdf':
-                annotated = _annotate_pdf_with_destinations(nodes_to_annotate, source_path)
+                annotated = _find_page_number_for_node(nodes_to_annotate, source_path)
                 total_annotated += annotated
                 total_failed += (len(nodes_to_annotate) - annotated)
 
@@ -226,9 +220,7 @@ def annotate_documents_with_node_anchors(
                 total_failed += (len(nodes_to_annotate) - annotated)
 
             else:
-                logger.info(f"   Type de fichier non supporté : {ext_lower}, assignation d'IDs de fallback.")
-                for node in nodes_to_annotate:
-                    node.metadata['node_anchor_id'] = f"node_{node.id_}"
+                logger.info(f"   Type de fichier non supporté : {ext_lower}, skipping annotation.")
                 total_annotated += len(nodes_to_annotate)
 
     logger.info(f"\n{'=' * 80}")
@@ -343,17 +335,6 @@ def clean_markdown_whitespace(markdown_text: str) -> str:
 # Modified section of index_creation_task function
 # Replace the duplicate checking section (around lines 395-410) with:
 
-def make_windows_long_path(path):
-    """
-    Convertit un chemin en chemin long Windows (préfixé \\?\) si nécessaire.
-    """
-    if os.name == 'nt' and not path.startswith('\\\\?\\'):
-        # Convertir en chemin absolu d'abord
-        abs_path = os.path.abspath(path)
-        return '\\\\?\\' + abs_path
-    return path
-
-
 def index_creation_task(index_id: str, files_info: List[dict], metadata_json: str):
     """
     Tâche d'indexation complète avec support hiérarchique.
@@ -361,8 +342,7 @@ def index_creation_task(index_id: str, files_info: List[dict], metadata_json: st
     index_path = get_index_path(index_id)
     md_files_dir = os.path.join(index_path, "md_files")
     index_dir = os.path.join(index_path, "index")
-    source_files_archive = os.path.join(index_path, "source_files_archive")
-    source_files_temp = os.path.join(index_path, "source_files")
+    source_files_dir = os.path.join(index_path, "source_files")
 
     # Créer un fichier de statut "en cours"
     status_file = os.path.join(index_path, ".indexing_status")
@@ -375,7 +355,6 @@ def index_creation_task(index_id: str, files_info: List[dict], metadata_json: st
     search_cache.clear_index_cache(index_path)
 
     os.makedirs(md_files_dir, exist_ok=True)
-    os.makedirs(source_files_archive, exist_ok=True)
 
     try:
         # ✅ NOUVEAU : Construire un dictionnaire des vraies URLs depuis metadata_json
@@ -417,7 +396,7 @@ def index_creation_task(index_id: str, files_info: List[dict], metadata_json: st
             relative_path = file_info.get("relative_path")
 
             if not relative_path:
-                relative_path = extract_relative_path(file_path, source_files_temp)
+                relative_path = extract_relative_path(file_path, source_files_dir)
 
             # Normaliser le nom de fichier
             normalized_basename, ext = os.path.splitext(normalize_filename(original_filename))
@@ -537,23 +516,7 @@ def index_creation_task(index_id: str, files_info: List[dict], metadata_json: st
 
             seen_basenames.add(normalized_basename)
 
-            # ✅ Reproduire la hiérarchie dans source_files_archive
-            archive_dir_for_file = os.path.join(source_files_archive, relative_dir)
-            os.makedirs(archive_dir_for_file, exist_ok=True)
-
-            archived_filename = f"{normalized_basename}{ext}"
-            archive_destination = make_windows_long_path(
-                os.path.join(archive_dir_for_file, archived_filename)
-            )
-            archived_relative_path = os.path.join(relative_dir,
-                                                  archived_filename) if relative_dir else archived_filename
-
-            # Copier vers source_files_archive
-            if file_path != archive_destination:
-                shutil.copy2(file_path, archive_destination)
-                logger.info(f"File archived: {archived_relative_path}")
-
-            # ✅ Reproduire la hiérarchie dans md_files
+            # Reproduire la hiérarchie dans md_files
             os.makedirs(md_dir_for_file, exist_ok=True)
 
             md_filename = f"{normalized_basename}.md"
@@ -608,9 +571,9 @@ def index_creation_task(index_id: str, files_info: List[dict], metadata_json: st
             if not os.path.exists(meta_filepath):
                 with open(meta_filepath, "w", encoding="utf-8") as f:
                     json.dump({
-                        "source_url": true_source_url,  # ← VRAIE URL
-                        "source_filename": archived_filename,
-                        "source_relative_path": archived_relative_path
+                        "source_url": true_source_url,
+                        "source_filename": original_filename,
+                        "source_relative_path": relative_path
                     }, f, indent=2)
                 logger.info(f"Metadata file created: {os.path.join(relative_dir, md_filename + '.meta')}")
                 logger.info(f"  URL: {true_source_url}")
@@ -621,15 +584,15 @@ def index_creation_task(index_id: str, files_info: List[dict], metadata_json: st
             if ext.lower() in ['.html', '.htm']:
                 logger.info(f"🌐 HTML detected: {original_filename}")
                 try:
-                    cleaned_html_path = clean_html_before_docling(archive_destination)
+                    cleaned_html_path = clean_html_before_docling(file_path)
                     file_to_convert = cleaned_html_path
                     cleanup_temp = True
                 except Exception as e:
                     logger.warning(f"⚠️ HTML cleaning failed: {e}")
-                    file_to_convert = archive_destination
+                    file_to_convert = file_path
                     cleanup_temp = False
             else:
-                file_to_convert = archive_destination
+                file_to_convert = file_path
                 cleanup_temp = False
 
             # Conversion via Docling
@@ -784,327 +747,75 @@ def _normalize_text_for_comparison(text: str) -> str:
     return text.strip()
 
 
-def _find_coords_on_page(doc, page_number: int, matched_text_from_pdf: str):
+def _find_page_number_for_node(nodes: List, pdf_path: str) -> int:
     """
-    Cherche les coordonnées d'un texte dans une page PDF avec stratégie de fallback progressive.
-
-    Args:
-        doc: Document PyMuPDF ouvert
-        page_number: Numéro de page (0-indexed)
-        matched_text_from_pdf: Texte extrait du PDF à chercher
-
-    Returns:
-        Tuple (instances, strategy_used) ou (None, None)
-    """
-    try:
-        page = doc[page_number]
-        words = matched_text_from_pdf.split()
-
-        if len(words) < 5:
-            logger.debug(f"         -> Too few words ({len(words)}) for search")
-            return None, None
-
-        # Stratégie 1 : Premiers 15 mots
-        search_phrase = " ".join(words[:15])
-        logger.debug(f"         -> Strategy 1 (first 15 words): '{search_phrase[:100]}...'")
-        instances = page.search_for(search_phrase, quads=False)
-        if instances:
-            return instances, "first_15_words"
-
-        # Stratégie 2 : Fenêtre glissante de 15 mots
-        max_iterations = min(100, len(words) - 15)
-
-        for i in range(1, max_iterations):
-            search_phrase = " ".join(words[i:i + 15])
-            instances = page.search_for(search_phrase, quads=False)
-            if instances:
-                logger.debug(f"         -> Found with sliding window at offset {i}")
-                return instances, f"sliding_window_offset_{i}"
-
-        logger.debug(f"         -> Sliding window tried {max_iterations} positions, all failed")
-
-        # Stratégie 3 : Si texte très court, essayer tout
-        if len(words) < 30:
-            logger.debug(f"         -> Strategy 3 (full text for short node): '{matched_text_from_pdf[:100]}...'")
-            instances = page.search_for(matched_text_from_pdf, quads=False)
-            if instances:
-                return instances, "full_text"
-
-        return None, None
-
-    except Exception as e:
-        logger.debug(f"         -> Search error: {e}")
-        return None, None
-
-
-def _is_table_node(text: str) -> bool:
-    """
-    Détecte si un node contient un tableau markdown.
-    """
-    # Indicateurs de tableaux
-    has_pipes = '|' in text
-    has_dashes = '-----' in text or '----' in text
-    has_dots = '......' in text or '.....' in text
-    has_underscores = '_____' in text or '____' in text
-
-    return has_pipes or has_dashes or has_dots or has_underscores
-
-
-def _annotate_pdf_with_destinations(nodes: List, pdf_path: str) -> int:
-    """
-    Version avec normalisation PUIS découpe.
+    Find page numbers for each node by fuzzy matching node text against PDF pages.
+    Sets page_number and page_confidence metadata on each node.
+    Does NOT modify the PDF file.
     """
     try:
         doc = pymupdf.open(pdf_path)
 
-        # Extraction (inchangé)
-        page_char_offsets = {}
-        pages_raw_text = {}
         pages_normalized_text = {}
-        full_text = ""
 
         for page_num in range(len(doc)):
             page_text = doc[page_num].get_text("text")
-            pages_raw_text[page_num] = page_text
             pages_normalized_text[page_num] = _normalize_text_for_comparison(page_text)
-            page_char_offsets[page_num] = len(full_text)
-            full_text += page_text + "\n"
 
-        clean_full_text = re.sub(r'\s+', ' ', full_text).strip()
-        normalized_full_text = _normalize_text_for_comparison(full_text)
-
-        logger.info(f"   📖 PDF loaded: {len(doc)} pages, {len(clean_full_text):,} chars")
+        logger.info(f"   📖 PDF loaded: {len(doc)} pages")
 
         annotated_count = 0
-        toc = doc.get_toc()
         last_found_page = 0
 
         for idx, node in enumerate(nodes):
-            logger.info(f"\n   🔄 Node {idx + 1}/{len(nodes)} (ID: {node.id_[:8]}...)")
-
             node_full_text = node.text
-
-            # ✅ CHANGEMENT : Normaliser PUIS couper
             normalized_full_node = _normalize_text_for_comparison(node_full_text)
 
             if len(normalized_full_node) < 50:
-                node.metadata['node_anchor_id'] = f"node_{node.id_}"
                 continue
 
-            # Couper APRÈS normalisation
             normalized_snippet = normalized_full_node[:300]
 
-            # Pour les logs : garder aussi le snippet original correspondant
-            # (approximation : prendre plus de caractères bruts pour avoir ~300 normalisés)
-            search_snippet_for_logs = node_full_text[:600]  # Plus large pour les logs
-
-            # Détection de tableau
-            is_table = _is_table_node(node_full_text)
-            confidence_threshold = 50 if is_table else 70
-
-            if is_table:
-                logger.info(f"      📊 Table detected - using lower threshold ({confidence_threshold}%)")
-
-            logger.info(f"      📄 Starting search from last found page: {last_found_page + 1}")
-
-            # Pages prioritaires
-            pages_to_check = []
-            pages_to_check.append(last_found_page)
-
+            # Priority pages (near last found)
+            pages_to_check = [last_found_page]
             for offset in range(1, 5):
                 if last_found_page - offset > 0:
                     pages_to_check.append(last_found_page - offset)
 
-            logger.info(f"      🔍 Searching in priority pages: {[p + 1 for p in pages_to_check]}")
-
             best_page = last_found_page
             best_page_score = 0
 
-            # Chercher dans les pages prioritaires
             for page_num in pages_to_check:
-                normalized_page_text = pages_normalized_text[page_num]
-                score = fuzz.partial_ratio(normalized_snippet, normalized_page_text)
-
+                score = fuzz.partial_ratio(normalized_snippet, pages_normalized_text[page_num])
                 if score > best_page_score:
                     best_page_score = score
                     best_page = page_num
-                    logger.debug(f"         -> Page {page_num + 1}: {score:.1f}% (new best)")
-
                     if score > 95:
                         break
 
-            # Si le score est insuffisant, élargir À TOUT LE DOCUMENT
+            # Widen search if score is low
             if best_page_score < 90:
-                logger.warning(
-                    f"      ⚠️  Low score in priority pages ({best_page_score:.1f}%), searching ALL pages...")
-
-                for page_num in range(len(doc)):  # ← TOUT le document, pas juste après
+                for page_num in range(len(doc)):
                     if page_num in pages_to_check:
-                        continue  # Déjà vérifié
-
-                    normalized_page_text = pages_normalized_text[page_num]
-                    score = fuzz.partial_ratio(normalized_snippet, normalized_page_text)
-
+                        continue
+                    score = fuzz.partial_ratio(normalized_snippet, pages_normalized_text[page_num])
                     if score > best_page_score:
                         best_page_score = score
                         best_page = page_num
-                        logger.debug(f"         -> Page {page_num + 1}: {score:.1f}% (new best)")
 
-            logger.info(f"      ✓ Best match: page {best_page + 1} (score: {best_page_score:.1f}%)")
-
-            # Threshold adaptatif
-            if best_page_score < confidence_threshold:
-                logger.warning(
-                    f"      ⚠️  Low confidence ({best_page_score:.1f}% < {confidence_threshold}%) - creating page-level anchor")
-                logger.warning("=" * 80)
-                logger.warning("      >>> DIAGNOSTIC: LOW CONFIDENCE NODE <<<")
-                logger.warning("-" * 80)
-                logger.warning(f"      [Is table]: {is_table}")
-                logger.warning(f"      [Threshold used]: {confidence_threshold}%")
-                logger.warning("-" * 80)
-                logger.warning(f"      [Node content ORIGINAL] (length: {len(node_full_text)}):")
-                logger.warning("-" * 80)
-                logger.warning(node_full_text[:500])
-                logger.warning("-" * 80)
-                logger.warning(f"      [Search snippet ORIGINAL] (length: {len(search_snippet_for_logs)}):")
-                logger.warning("-" * 80)
-                logger.warning(search_snippet_for_logs)
-                logger.warning("-" * 80)
-                logger.warning(f"      [Search snippet NORMALIZED] (length: {len(normalized_snippet)}):")
-                logger.warning("-" * 80)
-                logger.warning(normalized_snippet)
-                logger.warning("-" * 80)
-                logger.warning(f"      [Best match was on page {best_page + 1}]")
-                logger.warning(f"      [Page {best_page + 1} text ORIGINAL - first 500 chars]:")
-                logger.warning("-" * 80)
-                logger.warning(pages_raw_text[best_page][:500])
-                logger.warning("-" * 80)
-                logger.warning(f"      [Page {best_page + 1} text NORMALIZED - first 300 chars]:")
-                logger.warning("-" * 80)
-                logger.warning(pages_normalized_text[best_page])
-                logger.warning("=" * 80)
-
-                dest_name = f"node_{node.id_}"
-                toc.append([1, dest_name, best_page + 1])
+            if best_page_score >= 50:
                 node.metadata.update({
-                    'node_anchor_id': dest_name,
                     'page_number': best_page + 1,
                     'page_confidence': best_page_score,
-                    'anchor_type': 'page_level_low_confidence',
-                    'is_table': is_table
                 })
                 annotated_count += 1
                 last_found_page = best_page
-                continue
-
-            target_page_num = best_page
-            page_text_content = pages_raw_text[target_page_num]
-            normalized_page_content = pages_normalized_text[target_page_num]
-
-            # Extraire le texte matché
-            alignment = fuzz.partial_ratio_alignment(
-                normalized_snippet,
-                normalized_page_content,
-                score_cutoff=80
-            )
-
-            if not alignment:
-                logger.warning(f"      ⚠️  Cannot extract matched text - creating page-level anchor")
-                logger.warning("=" * 80)
-                logger.warning("      >>> DIAGNOSTIC: CANNOT EXTRACT MATCHED TEXT <<<")
-                logger.warning("-" * 80)
-                logger.warning(f"      [Is table]: {is_table}")
-                logger.warning("-" * 80)
-                logger.warning(f"      [Snippet ORIGINAL] (length: {len(search_snippet_for_logs)}):")
-                logger.warning("-" * 80)
-                logger.warning(search_snippet_for_logs)
-                logger.warning("-" * 80)
-                logger.warning(f"      [Snippet NORMALIZED] (length: {len(normalized_snippet)}):")
-                logger.warning("-" * 80)
-                logger.warning(normalized_snippet)
-                logger.warning("-" * 80)
-                logger.warning(f"      [Page {target_page_num + 1} ORIGINAL] (length: {len(page_text_content)}):")
-                logger.warning("-" * 80)
-                logger.warning(page_text_content[:500])
-                logger.warning("-" * 80)
-                logger.warning(
-                    f"      [Page {target_page_num + 1} NORMALIZED] (length: {len(normalized_page_content)}):")
-                logger.warning("-" * 80)
-                logger.warning(normalized_page_content[:500])
-                logger.warning("=" * 80)
-
-                dest_name = f"node_{node.id_}"
-                toc.append([1, dest_name, target_page_num + 1])
-                node.metadata.update({
-                    'node_anchor_id': dest_name,
-                    'page_number': target_page_num + 1,
-                    'page_confidence': best_page_score,
-                    'anchor_type': 'page_level',
-                    'is_table': is_table
-                })
-                annotated_count += 1
-                last_found_page = target_page_num
-                continue
-
-            matched_text_from_pdf = page_text_content[alignment.dest_start: alignment.dest_end]
-            logger.info(
-                f"      📝 Extracted from PDF ({len(matched_text_from_pdf)} chars): '{matched_text_from_pdf[:100]}...'")
-
-            # Recherche des coordonnées
-            text_instances = None
-            final_page_num = -1
-            strategy_used = None
-
-            text_instances, strategy_used = _find_coords_on_page(doc, target_page_num, matched_text_from_pdf)
-            if text_instances:
-                final_page_num = target_page_num
-
-            # Fallback : page suivante
-            if not text_instances and (target_page_num + 1) < len(doc):
-                logger.info(f"      -> Trying next page for coords...")
-                text_instances, strategy_used = _find_coords_on_page(doc, target_page_num + 1, matched_text_from_pdf)
-                if text_instances:
-                    final_page_num = target_page_num + 1
-                    logger.info(f"      -> Found on fallback page {final_page_num + 1}!")
-
-            # Créer la destination
-            if text_instances:
-                dest_name = f"node_{node.id_}"
-                toc.append([1, dest_name, final_page_num + 1])
-                node.metadata.update({
-                    'node_anchor_id': dest_name,
-                    'page_number': final_page_num + 1,
-                    'page_confidence': best_page_score,
-                    'anchor_strategy': strategy_used,
-                    'is_table': is_table
-                })
-                annotated_count += 1
-                logger.info(f"      ✅ Destination created on page {final_page_num + 1} (strategy: {strategy_used})")
-                last_found_page = final_page_num
-            else:
-                logger.warning(f"      ⚠️  All coord strategies failed - creating page-level anchor")
-                dest_name = f"node_{node.id_}"
-                toc.append([1, dest_name, target_page_num + 1])
-                node.metadata.update({
-                    'node_anchor_id': dest_name,
-                    'page_number': target_page_num + 1,
-                    'page_confidence': best_page_score,
-                    'anchor_type': 'page_level',
-                    'is_table': is_table
-                })
-                annotated_count += 1
-                last_found_page = target_page_num
-
-        if annotated_count > 0:
-            doc.set_toc(toc)
-            doc.save(pdf_path, incremental=True, encryption=pymupdf.PDF_ENCRYPT_KEEP)
-            logger.info(f"\n   ✅ PDF saved with {annotated_count} destinations.")
 
         doc.close()
         return annotated_count
 
     except Exception as e:
-        logger.error(f"   ❌ Error: {e}", exc_info=True)
+        logger.error(f"   ❌ Error finding page numbers: {e}", exc_info=True)
         return 0
 
 
@@ -1244,11 +955,11 @@ def run_indexing_logic(source_md_dir: str, index_dir: str):
     logger.info("ÉTAPE 3 : ANNOTATION DES DOCUMENTS (POST-FUSION, HIÉRARCHIQUE)")
     logger.info("=" * 80)
 
-    source_files_archive = os.path.join(os.path.dirname(source_md_dir), "source_files_archive")
+    source_files_dir = os.path.join(os.path.dirname(source_md_dir), "source_files")
 
     annotate_documents_with_node_anchors(
         all_nodes,
-        source_files_archive,
+        source_files_dir,
         source_md_dir
     )
 
@@ -1287,7 +998,7 @@ def run_indexing_logic(source_md_dir: str, index_dir: str):
                 k: v for k, v in child_node.metadata.items()
                 if k.startswith("Header") or k in [
                     "header_path", "file_name", "source_url",
-                    "node_anchor_id", "source_relative_path",
+                    "source_relative_path",
                     "page_number", "page_confidence",
                     "html_confidence"
                 ]
