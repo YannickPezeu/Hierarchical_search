@@ -10,6 +10,7 @@ class SearchRequest(BaseModel):
     password: Optional[str] = None
     rerank: bool = Field(default=True, description="Activer ou désactiver le reranking interne")
     top_k: int = Field(default=15, description="Nombre de résultats avant reranking (ou final si rerank=False)")
+    url_filter: Optional[str] = Field(default=None, description="URL path prefix to restrict search (e.g. 'about/data')")
 
 
 class IndexingStatus(BaseModel):

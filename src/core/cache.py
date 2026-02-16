@@ -50,11 +50,11 @@ class SearchCache:
         query = " ".join(query.split())  # Normaliser les espaces multiples
         return query
 
-    def _generate_cache_key(self, query: str, index_id: str, user_groups: List[str]) -> str:
+    def _generate_cache_key(self, query: str, index_id: str, user_groups: List[str], url_filter: Optional[str] = None) -> str:
         """
         Génère une clé de cache unique et reproductible.
 
-        Format: hash(query_normalisée + index_id + user_groups_triés)
+        Format: hash(query_normalisée + index_id + user_groups_triés + url_filter)
         """
         normalized_query = self._normalize_query(query)
 
@@ -63,7 +63,8 @@ class SearchCache:
         groups_str = ",".join(sorted_groups)
 
         # Créer la chaîne à hasher
-        cache_string = f"{normalized_query}|{index_id}|{groups_str}"
+        filter_str = url_filter.strip("/") if url_filter else ""
+        cache_string = f"{normalized_query}|{index_id}|{groups_str}|{filter_str}"
 
         # Utiliser SHA256 pour éviter les collisions (plus court que MD5 suffit)
         cache_key = hashlib.sha256(cache_string.encode()).hexdigest()[:16]  # 16 chars suffisent
@@ -91,7 +92,8 @@ class SearchCache:
             query: str,
             index_id: str,
             index_path: str,
-            user_groups: List[str]
+            user_groups: List[str],
+            url_filter: Optional[str] = None
     ) -> Optional[List[Tuple[str, str, float]]]:
         """
         Récupère les résultats cachés pour une requête.
@@ -106,11 +108,12 @@ class SearchCache:
             index_id: ID de la bibliothèque
             index_path: Chemin du dossier de l'index
             user_groups: Groupes de l'utilisateur
+            url_filter: URL path prefix filter (included in cache key)
 
         Returns:
             Liste de tuples (child_node_id, parent_node_id, score) ou None si non trouvé
         """
-        cache_key = self._generate_cache_key(query, index_id, user_groups)
+        cache_key = self._generate_cache_key(query, index_id, user_groups, url_filter)
 
         # ========================================
         # ÉTAPE 1 : Chercher dans le cache RAM
@@ -177,7 +180,8 @@ class SearchCache:
             index_id: str,
             index_path: str,
             user_groups: List[str],
-            results: List[Tuple[str, str, float]]
+            results: List[Tuple[str, str, float]],
+            url_filter: Optional[str] = None
     ):
         """
         Sauvegarde les résultats dans le cache (RAM + Disque).
@@ -188,8 +192,9 @@ class SearchCache:
             index_path: Chemin du dossier de l'index
             user_groups: Groupes de l'utilisateur
             results: Liste de tuples (child_node_id, parent_node_id, score)
+            url_filter: URL path prefix filter (included in cache key)
         """
-        cache_key = self._generate_cache_key(query, index_id, user_groups)
+        cache_key = self._generate_cache_key(query, index_id, user_groups, url_filter)
 
         # Arrondir les scores
         rounded_results = [

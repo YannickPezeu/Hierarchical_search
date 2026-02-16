@@ -3,6 +3,7 @@ import os
 import json
 import logging
 from typing import List
+from urllib.parse import urlparse
 import shutil
 
 import faiss
@@ -270,7 +271,8 @@ async def search_in_index(
             query=request.query,
             index_id=index_id,
             index_path=index_path,
-            user_groups=request.user_groups
+            user_groups=request.user_groups,
+            url_filter=request.url_filter
         )
 
     # Chargement du VectorStore (FAISS) si nécessaire
@@ -317,9 +319,15 @@ async def search_in_index(
         index = load_index_from_storage(storage_context)
         # On récupère large (top 50) pour avoir de la matière à reranker
         base_retriever = index.as_retriever(similarity_top_k=50)
-        INDEX_CACHE[index_dir] = (base_retriever, storage_context)
+        INDEX_CACHE[index_dir] = (base_retriever, storage_context, index)
     else:
-        base_retriever, storage_context = INDEX_CACHE[index_dir]
+        base_retriever, storage_context, index = INDEX_CACHE[index_dir]
+
+    # When url_filter is active, use a wider retrieval (1000) to ensure enough matches
+    if request.url_filter:
+        retriever = index.as_retriever(similarity_top_k=1000)
+    else:
+        retriever = base_retriever
 
     docstore = storage_context.docstore
 
@@ -349,9 +357,20 @@ async def search_in_index(
     logger.info(f"🔍 Cache MISS (or skipped). Running full search pipeline.")
 
     # ÉTAPE 1: Retrieval initial (sub-chunks)
-    logger.info(f"📍 STEP 1: Retrieving sub-chunks for: '{request.query}'")
-    subchunk_results = base_retriever.retrieve(request.query)
+    logger.info(f"📍 STEP 1: Retrieving sub-chunks for: '{request.query}'"
+                f"{f' (url_filter: {request.url_filter}, top_k=1000)' if request.url_filter else ''}")
+    subchunk_results = retriever.retrieve(request.query)
     logger.info(f"  → Retrieved {len(subchunk_results)} sub-chunks")
+
+    # ÉTAPE 1b: Filter by URL prefix (if url_filter is set)
+    if request.url_filter:
+        normalized_prefix = "/" + request.url_filter.strip("/") + "/"
+        before_count = len(subchunk_results)
+        subchunk_results = [
+            r for r in subchunk_results
+            if urlparse(r.node.metadata.get("source_url", "")).path.startswith(normalized_prefix)
+        ]
+        logger.info(f"  → URL filter '{normalized_prefix}': {before_count} -> {len(subchunk_results)} sub-chunks")
 
     # ÉTAPE 2: Remonter la hiérarchie (sub-chunk → child → parent)
     unique_child_parent_pairs = {}
@@ -516,7 +535,8 @@ async def search_in_index(
             index_id=index_id,
             index_path=index_path,
             user_groups=request.user_groups,
-            results=cache_data
+            results=cache_data,
+            url_filter=request.url_filter
         )
 
     _log_token_estimate(results, source="full pipeline")
